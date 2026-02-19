@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบวิเคราะห์ฝุ่นรายอำเภอ เชียงใหม่</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- เพิ่มฟอนต์ Prompt สำหรับ Export Engine -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800;900&family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+        
+        /* --- CSS สำหรับหน้าเว็บ (คงเดิม ห้ามแก้) --- */
+        .aqi-card-web {
+            transition: transform 0.2s ease;
+        }
+        .aqi-card-web:hover {
+            transform: scale(1.01);
+        }
+
+        /* --- CSS สำหรับ Export รูปภาพเท่านั้น (Tuned V.38 - Spacing 8px & Unit 15px) --- */
+        #hiddenExportContainer {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 1080px;
+            background-color: transparent;
+            /* ใช้ฟอนต์ Prompt สำหรับภาพที่เซฟ */
+            font-family: 'Prompt', sans-serif;
+            font-feature-settings: "kern" 1, "liga" 1; 
+        }
+
+        .export-table-row {
+            width: 100%;
+            height: 120px;
+            border-collapse: separate;
+            border-spacing: 0;
+            /* ปรับระยะห่างให้ชิดกันขึ้น (เดิม 20px -> 12px -> 8px) */
+            margin-bottom: 8px;
+            border-radius: 60px;
+            color: white;
+            table-layout: fixed;
+        }
+
+        .export-table-row td {
+            vertical-align: middle;
+            padding: 0;
+        }
+
+        /* 1. คอลัมน์ลำดับ (คงเดิม) */
+        .exp-col-rank {
+            width: 130px;
+            text-align: center;
+            font-size: 85px; 
+            font-weight: 800;
+            opacity: 0.6;
+            line-height: 1;
+            padding-left: 20px !important;
+            padding-bottom: 0; 
+            position: relative;
+            top: -35px; 
+        }
+
+        /* 2. คอลัมน์ข้อมูลตรงกลาง (คงเดิม) */
+        .exp-col-info {
+            text-align: left;
+            padding-left: 10px;
+            overflow: visible;
+            vertical-align: middle;
+        }
+
+        .exp-district {
+            font-size: 48px; 
+            font-weight: 700;
+            line-height: 1.1;
+            display: block;
+            margin-top: -30px; 
+            margin-bottom: 8px;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .exp-location {
+            font-size: 20px;
+            font-weight: 500;
+            opacity: 0.95;
+            display: block;
+            white-space: nowrap;
+            overflow: visible;
+            text-overflow: clip;
+            line-height: 1.5;
+            padding-bottom: 8px;
+            margin-top: 10px; 
+        }
+
+        /* 3. คอลัมน์ค่าฝุ่น */
+        .exp-col-value {
+            width: 480px; 
+            text-align: right;
+            padding-right: 60px !important;
+            vertical-align: middle;
+        }
+
+        .exp-value-group {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            position: relative;
+            top: -30px; 
+        }
+
+        .exp-val-row {
+            display: flex;
+            align-items: flex-start; 
+            justify-content: flex-end;
+        }
+
+        /* คำว่า PM2.5 (คงเดิม) */
+        .exp-pm-label {
+            font-size: 24px;
+            font-weight: 700;
+            opacity: 0.4;
+            margin-right: 15px;
+            text-transform: uppercase;
+            position: relative;
+            top: 18px; 
+        }
+
+        /* ตัวเลขค่าฝุ่น (คงเดิม) */
+        .exp-val-num {
+            font-size: 82px;
+            font-weight: 800;
+            line-height: 1;
+            display: inline-block;
+            width: 150px; 
+            text-align: right;
+            position: relative;
+            top: -2px; 
+        }
+
+        /* แก้ไขหน่วยวัดให้ขยับลงมาเป็น 15px */
+        .exp-unit {
+            font-size: 15px;
+            font-weight: 600;
+            opacity: 0.9;
+            margin-top: 0px; 
+            position: relative;
+            top: 15px; /* ปรับจาก 14px เป็น 15px */
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3498db;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <div class="bg-white p-6 rounded-3xl shadow-sm border-l-[16px] border-red-600 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-4xl font-[900] text-slate-900 leading-none tracking-tighter uppercase">CHIANG MAI AIR</h1>
+                <p class="text-slate-500 font-bold mt-1 uppercase tracking-widest text-xs">District Ranking Monitor (Auto Update)</p>
+            </div>
+            <div id="timeDisplay" class="hidden text-right bg-slate-50 px-6 py-2 rounded-2xl border border-slate-100">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Data Update</p>
+                <p id="timeValue" class="text-lg font-black text-red-600"></p>
+            </div>
+        </div>
+
+        <!-- Dashboard Section: TOP 10 (Moved Up & Renamed) -->
+        <div id="summarySection" class="hidden space-y-4">
+            <div class="flex flex-wrap items-center justify-between px-2 mb-4 gap-2">
+                <div class="flex items-center gap-3">
+                    <!-- เปลี่ยนข้อความตามสั่ง -->
+                    <span class="bg-slate-900 text-white px-4 py-1 rounded-full text-xs font-black tracking-[0.05em]">10 อำเภอค่าฝุ่นสูงสุด</span>
+                    <span id="dataStatusBadge" class="text-[10px] font-black uppercase text-slate-400"></span>
+                </div>
+                
+                <button onclick="saveTop10Image()" class="bg-white border-2 border-slate-200 hover:border-slate-400 text-slate-600 font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-2 transition shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    บันทึกรูป (PNG ไม่มีพื้นหลัง)
+                </button>
+            </div>
+            
+            <!-- Container สำหรับแสดงผลหน้าเว็บ -->
+            <div id="top10WebContainer" class="flex flex-col gap-3 p-2">
+                <!-- Data injected here -->
+            </div>
+        </div>
+
+        <!-- Control Center (Simplified) -->
+        <div class="bg-white p-8 rounded-[40px] shadow-xl shadow-slate-200/50 space-y-4 border border-white">
+            <!-- Fetch Status -->
+            <div id="fetchStatusContainer" class="text-center">
+                <div id="fetchSpinner" class="loading-spinner mx-auto mb-2 hidden"></div>
+                <p id="fetchStatus" class="text-sm font-bold text-slate-500">กำลังเตรียมพร้อม...</p>
+            </div>
+
+            <!-- Manual Input (Fallback) -->
+            <div class="space-y-2 pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between cursor-pointer" onclick="toggleManualInput()">
+                     <h3 class="font-bold text-slate-400 text-xs uppercase tracking-wider flex items-center gap-2">
+                        <span>🛠️ หากข้อมูลไม่ขึ้น ใช้วิธีวางโค้ด (Manual)</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                     </h3>
+                </div>
+                
+                <div id="manualInputSection" class="hidden space-y-3 mt-2">
+                    <textarea id="htmlInput" rows="2" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[10px] focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="วางโค้ด HTML ที่นี่..."></textarea>
+                    <div class="flex gap-2">
+                        <button onclick="analyzeDust()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 py-2 rounded-xl transition text-xs w-full">ประมวลผลโค้ด</button>
+                        <button onclick="clearInput()" class="text-red-400 hover:text-red-600 font-bold px-4 py-2 text-xs border border-red-100 rounded-xl">ล้างค่า</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Ranking Table -->
+        <div id="fullListSection" class="hidden bg-white rounded-[32px] shadow-sm overflow-hidden border border-slate-100">
+            <div class="p-6 border-b bg-slate-50/50 flex justify-between items-center">
+                <h3 class="font-black text-slate-700 uppercase tracking-widest text-sm">ตารางสรุปรายอำเภอทั้งหมด</h3>
+                <div class="flex gap-2" id="statsMini">
+                    <span id="miniFound" class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full uppercase"></span>
+                    <span id="miniMissing" class="text-[10px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase"></span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                            <th class="py-4 px-8 text-center w-16">อันดับ</th>
+                            <th class="py-4 px-6">อำเภอ</th>
+                            <th class="py-4 px-6">จุดตรวจวัด (Location)</th>
+                            <th class="py-4 px-6 text-center">PM2.5</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fullTableBody" class="text-slate-600"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Missing Alert -->
+        <div id="missingAlert" class="hidden bg-red-500 p-5 rounded-3xl text-white shadow-lg shadow-red-100">
+            <div class="flex items-start gap-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <div>
+                    <p class="text-xs font-black uppercase tracking-widest opacity-80 mb-1">Missing District Data</p>
+                    <p class="text-sm font-bold leading-relaxed">ไม่พบข้อมูลของอำเภอ: <span id="missingNames" class="underline"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center py-12 opacity-40">
+            <p class="text-[10px] font-black uppercase tracking-[0.5em] text-slate-500">Chiang Mai Air Monitoring Console v11.0 (Auto Start)</p>
+            <p class="text-[9px] font-bold text-slate-400 mt-2 tracking-widest">Data Source: CCDC (DustBoy) - Chiang Mai University</p>
+        </footer>
+    </div>
+
+    <!-- Hidden Export Container (ใช้ Table เพื่อความแม่นยำตอน Save) -->
+    <div id="hiddenExportContainer"></div>
+
+    <script>
+        const allDistricts = ["เมืองเชียงใหม่", "จอมทอง", "แม่แจ่ม", "เชียงดาว", "ดอยสะเก็ด", "แม่แตง", "แม่ริม", "สะเมิง", "ฝาง", "แม่อาย", "พร้าว", "สันป่าตอง", "สันกำแพง", "สันทราย", "หางดง", "ฮอด", "ดอยเต่า", "อมก๋อย", "สารภี", "เวียงแหง", "ไชยปราการ", "แม่วาง", "แม่ออน", "ดอยหล่อ", "กัลยาณิวัฒนา"];
+        let currentResultData = [];
+
+        const formatLocation = (loc) => {
+            if (!loc) return "";
+            let cleaned = loc.replace(/\s*(?:อ\.|อำเภอ|จ\.|จังหวัด)\s*[ก-๙]+/g, '').trim();
+            return `จุดตรวจวัด : ${cleaned}`;
+        };
+
+        // --- เริ่มต้นทำงานทันทีเมื่อโหลดหน้าเว็บ ---
+        window.onload = function() {
+            autoFetchData();
+        };
+
+        function toggleManualInput() {
+            const section = document.getElementById('manualInputSection');
+            section.classList.toggle('hidden');
+        }
+
+        async function autoFetchData() {
+            const statusEl = document.getElementById('fetchStatus');
+            const spinner = document.getElementById('fetchSpinner');
+
+            spinner.classList.remove('hidden');
+            statusEl.innerText = "กำลังเชื่อมต่อกับเซิร์ฟเวอร์ (Bypassing Cache)...";
+            statusEl.className = "text-sm font-bold text-blue-500";
+
+            const ts = Date.now();
+            const targetUrl = `https://www.cmuccdc.org/hourly/38?t=${ts}`;
+            let htmlContent = null;
+
+            try {
+                try {
+                    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, {
+                        cache: 'no-store',
+                        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+                    });
+                    if (res.ok) htmlContent = await res.text();
+                } catch (e) { console.warn("Primary Proxy failed"); }
+
+                if (!htmlContent || htmlContent.length < 500) {
+                    statusEl.innerText = "กำลังลองช่องทางสำรอง...";
+                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&timestamp=${ts}`, {
+                        cache: 'no-store'
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        htmlContent = data.contents;
+                    }
+                }
+
+                if (!htmlContent || htmlContent.length < 500) throw new Error("Fetch failed");
+
+                document.getElementById('htmlInput').value = htmlContent;
+                analyzeDust();
+                
+                statusEl.innerText = "✅ อัปเดตข้อมูลสำเร็จ (" + new Date().toLocaleTimeString('th-TH') + ")";
+                statusEl.className = "text-sm font-bold text-green-600";
+            } catch (error) {
+                statusEl.innerText = "❌ ดึงข้อมูลอัตโนมัติไม่สำเร็จ กรุณาใช้ 'วิธีวางโค้ด' ด้านล่าง";
+                statusEl.className = "text-sm font-bold text-red-500";
+                // เปิดส่วน Manual อัตโนมัติถ้า Auto พัง
+                document.getElementById('manualInputSection').classList.remove('hidden');
+            } finally {
+                spinner.classList.add('hidden');
+            }
+        }
+
+        function analyzeDust() {
+            const rawHtml = document.getElementById('htmlInput').value;
+            if (!rawHtml.trim()) return;
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(rawHtml, 'text/html');
+
+            let updateTime = "";
+            doc.querySelectorAll('p').forEach(p => {
+                if (p.innerText.includes("อัพเดทข้อมูลเมื่อ")) {
+                    updateTime = p.innerText.replace("อัพเดทข้อมูลเมื่อ :", "").trim();
+                }
+            });
+
+            if (updateTime) {
+                document.getElementById('timeValue').innerText = updateTime;
+                document.getElementById('timeDisplay').classList.remove('hidden');
+            }
+
+            const districtMap = {};
+            doc.querySelectorAll('tr').forEach(row => {
+                const nameEl = row.querySelector('.db_namez');
+                const valEl = row.querySelector('.c_value');
+                if (nameEl && valEl) {
+                    const fullName = nameEl.innerText.trim();
+                    const value = parseInt(valEl.innerText.trim());
+                    const amphoeMatch = fullName.match(/(?:อ\.|อำเภอ)\s*([ก-๙]+)/);
+                    if (amphoeMatch) {
+                        let aName = amphoeMatch[1].trim();
+                        if (aName === "เมือง") aName = "เมืองเชียงใหม่";
+                        if (!districtMap[aName] || value > districtMap[aName].val) {
+                            districtMap[aName] = { val: value, loc: fullName };
+                        }
+                    }
+                }
+            });
+
+            currentResultData = Object.keys(districtMap).map(k => ({ 
+                name: k, 
+                val: districtMap[k].val, 
+                location: districtMap[k].loc 
+            }));
+            currentResultData.sort((a, b) => b.val - a.val);
+
+            renderDisplay(currentResultData);
+        }
+
+        function renderDisplay(data) {
+            const top10Container = document.getElementById('top10WebContainer'); 
+            const tableBody = document.getElementById('fullTableBody');
+            
+            top10Container.innerHTML = ''; 
+            tableBody.innerHTML = '';
+
+            data.forEach((item, i) => {
+                let bgHex = "#0ea5e9"; 
+                if (item.val > 75) { bgHex = "#dc2626"; }
+                else if (item.val > 50) { bgHex = "#f97316"; }
+                else if (item.val > 37) { bgHex = "#facc15"; }
+                else if (item.val > 25) { bgHex = "#22c55e"; }
+
+                let textCol = (item.val > 37 && item.val <= 50) ? "text-slate-900" : "text-white";
+
+                if (i < 10) {
+                    top10Container.innerHTML += `
+                        <div style="background-color: ${bgHex};" class="aqi-card-web flex items-center ${textCol} px-6 py-4 rounded-[24px] shadow-sm overflow-hidden box-border h-[100px] relative mb-3">
+                            <div class="w-16 flex-shrink-0 text-center mr-4">
+                                <span class="text-6xl font-black opacity-30 leading-none block">${i+1}</span>
+                            </div>
+                            <div class="flex-1 min-w-0 pr-4 overflow-hidden">
+                                <div class="text-3xl font-black leading-tight mb-1 truncate">อ.${item.name}</div>
+                                <div class="text-xs font-bold opacity-90 truncate leading-normal">${formatLocation(item.location)}</div>
+                            </div>
+                            <div class="flex-shrink-0 text-right min-w-[90px]">
+                                <div class="flex flex-col items-end justify-center">
+                                    <div class="flex items-baseline justify-end">
+                                        <span class="text-sm font-bold mr-2 opacity-80">PM2.5</span>
+                                        <span class="text-6xl font-black leading-none">${item.val}</span>
+                                    </div>
+                                    <div class="text-[10px] font-bold opacity-80 mt-1 tracking-widest">µg/m³</div>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+
+                let badgeClass = item.val > 75 ? "bg-red-100 text-red-600" : item.val > 50 ? "bg-orange-100 text-orange-600" : item.val > 37 ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700";
+
+                tableBody.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50 transition">
+                        <td class="py-3 px-6 text-center font-bold text-slate-400">${i+1}</td>
+                        <td class="py-3 px-6 font-bold text-slate-700">อ.${item.name}</td>
+                        <td class="py-3 px-6 text-[11px] text-slate-400 max-w-xs truncate">${item.location}</td>
+                        <td class="py-3 px-6 text-center"><span class="${badgeClass} py-1 px-3 rounded-full font-black text-xs">${item.val}</span></td>
+                    </tr>`;
+            });
+
+            document.getElementById('dataStatusBadge').innerText = data.length === 25 ? "ข้อมูลครบถ้วน" : `ข้อมูลบางส่วน (${data.length}/25 อำเภอ)`;
+            document.getElementById('miniFound').innerText = `พบข้อมูล: ${data.length}`;
+            document.getElementById('miniMissing').innerText = `ขาด: ${allDistricts.length - data.length}`;
+
+            document.getElementById('summarySection').classList.remove('hidden');
+            document.getElementById('fullListSection').classList.remove('hidden');
+
+            const missing = allDistricts.filter(d => !data.find(item => item.name === d));
+            const missingAlert = document.getElementById('missingAlert');
+            if (missing.length) {
+                missingAlert.classList.remove('hidden');
+                document.getElementById('missingNames').innerText = missing.join(', ');
+            } else {
+                missingAlert.classList.add('hidden');
+            }
+        }
+
+        function saveTop10Image() {
+            const exportContainer = document.getElementById('hiddenExportContainer');
+            exportContainer.innerHTML = ''; 
+            
+            let rowsHtml = '';
+            const top10 = currentResultData.slice(0, 10);
+            
+            top10.forEach((item, i) => {
+                let bgHex = "#0ea5e9"; 
+                let textCol = "white";
+                
+                if (item.val > 75) { bgHex = "#dc2626"; } 
+                else if (item.val > 50) { bgHex = "#f97316"; } 
+                else if (item.val > 37) { bgHex = "#facc15"; textCol = "#1e293b"; } 
+                else if (item.val > 25) { bgHex = "#22c55e"; }
+
+                rowsHtml += `
+                    <table class="export-table-row" style="background-color: ${bgHex}; color: ${textCol};">
+                        <tr>
+                            <td class="exp-col-rank">${i+1}</td>
+                            <td class="exp-col-info">
+                                <span class="exp-district">อ.${item.name}</span>
+                                <span class="exp-location" style="color: ${textCol};">${formatLocation(item.location)}</span>
+                            </td>
+                            <td class="exp-col-value">
+                                <div class="exp-value-group">
+                                    <div class="exp-val-row">
+                                        <span class="exp-pm-label">PM2.5</span>
+                                        <span class="exp-val-num">${item.val}</span>
+                                    </div>
+                                    <div class="exp-unit">µg/m³</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>`;
+            });
+
+            exportContainer.innerHTML = `
+                <div style="padding: 40px; width: 1080px; box-sizing: border-box;">
+                    ${rowsHtml}
+                </div>
+            `;
+
+            html2canvas(exportContainer, {
+                backgroundColor: null,
+                scale: 2, 
+                logging: false,
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `PM25_ChiangMai_Top10_${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        function clearInput() {
+            document.getElementById('htmlInput').value = '';
+            document.getElementById('summarySection').classList.add('hidden');
+            document.getElementById('fullListSection').classList.add('hidden');
+            document.getElementById('missingAlert').classList.add('hidden');
+            document.getElementById('fetchStatus').innerText = '';
+        }
+    </script>
+</body>
+</html>
