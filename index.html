@@ -11,7 +11,7 @@
     <style>
         body { font-family: 'Sarabun', sans-serif; }
         
-        /* --- CSS สำหรับหน้าเว็บ (คงเดิม ห้ามแก้) --- */
+        /* --- CSS สำหรับหน้าเว็บ --- */
         .aqi-card-web {
             transition: transform 0.2s ease;
         }
@@ -19,14 +19,13 @@
             transform: scale(1.01);
         }
 
-        /* --- CSS สำหรับ Export รูปภาพเท่านั้น (Tuned V.38 - Spacing 8px & Unit 15px) --- */
+        /* --- CSS สำหรับ Export รูปภาพเท่านั้น (Tuned V.38 - Export Engine Untouched) --- */
         #hiddenExportContainer {
             position: absolute;
             left: -9999px;
             top: 0;
             width: 1080px;
             background-color: transparent;
-            /* ใช้ฟอนต์ Prompt สำหรับภาพที่เซฟ */
             font-family: 'Prompt', sans-serif;
             font-feature-settings: "kern" 1, "liga" 1; 
         }
@@ -36,8 +35,7 @@
             height: 120px;
             border-collapse: separate;
             border-spacing: 0;
-            /* ปรับระยะห่างให้ชิดกันขึ้น (เดิม 20px -> 12px -> 8px) */
-            margin-bottom: 8px;
+            margin-bottom: 20px;
             border-radius: 60px;
             color: white;
             table-layout: fixed;
@@ -48,7 +46,7 @@
             padding: 0;
         }
 
-        /* 1. คอลัมน์ลำดับ (คงเดิม) */
+        /* 1. คอลัมน์ลำดับ */
         .exp-col-rank {
             width: 130px;
             text-align: center;
@@ -62,7 +60,7 @@
             top: -35px; 
         }
 
-        /* 2. คอลัมน์ข้อมูลตรงกลาง (คงเดิม) */
+        /* 2. คอลัมน์ข้อมูลตรงกลาง */
         .exp-col-info {
             text-align: left;
             padding-left: 10px;
@@ -117,7 +115,6 @@
             justify-content: flex-end;
         }
 
-        /* คำว่า PM2.5 (คงเดิม) */
         .exp-pm-label {
             font-size: 24px;
             font-weight: 700;
@@ -128,7 +125,6 @@
             top: 18px; 
         }
 
-        /* ตัวเลขค่าฝุ่น (คงเดิม) */
         .exp-val-num {
             font-size: 82px;
             font-weight: 800;
@@ -140,14 +136,13 @@
             top: -2px; 
         }
 
-        /* แก้ไขหน่วยวัดให้ขยับลงมาเป็น 15px */
         .exp-unit {
             font-size: 15px;
             font-weight: 600;
             opacity: 0.9;
             margin-top: 0px; 
             position: relative;
-            top: 15px; /* ปรับจาก 14px เป็น 15px */
+            top: 14px; 
         }
 
         .loading-spinner {
@@ -161,28 +156,37 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 md:p-8">
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
 
     <div class="max-w-5xl mx-auto space-y-6">
         
         <!-- Header -->
         <div class="bg-white p-6 rounded-3xl shadow-sm border-l-[16px] border-red-600 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
+            <div class="flex-1">
                 <h1 class="text-4xl font-[900] text-slate-900 leading-none tracking-tighter uppercase">CHIANG MAI AIR</h1>
-                <p class="text-slate-500 font-bold mt-1 uppercase tracking-widest text-xs">District Ranking Monitor (Auto Update)</p>
+                <p class="text-slate-500 font-bold mt-1 uppercase tracking-widest text-xs">District Ranking Monitor</p>
             </div>
-            <div id="timeDisplay" class="hidden text-right bg-slate-50 px-6 py-2 rounded-2xl border border-slate-100">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Data Update</p>
-                <p id="timeValue" class="text-lg font-black text-red-600"></p>
+            
+            <!-- Update Button & Status -->
+            <div class="flex flex-col items-end gap-2">
+                <button onclick="autoFetchData()" id="btnHeaderUpdate" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-5 rounded-xl shadow-md transition flex items-center gap-2 text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    <span>อัปเดตข้อมูลล่าสุด</span>
+                </button>
+                <div id="timeDisplay" class="hidden text-right bg-slate-50 px-4 py-1 rounded-lg border border-slate-100">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Update Time</p>
+                    <p id="timeValue" class="text-sm font-black text-red-600"></p>
+                </div>
+                <!-- Spinner for Header -->
+                <div id="fetchSpinner" class="loading-spinner hidden"></div>
             </div>
         </div>
 
-        <!-- Dashboard Section: TOP 10 (Moved Up & Renamed) -->
+        <!-- Dashboard Section: TOP 10 (Moved to Top) -->
         <div id="summarySection" class="hidden space-y-4">
-            <div class="flex flex-wrap items-center justify-between px-2 mb-4 gap-2">
+            <div class="flex flex-wrap items-center justify-between px-2 mb-2 gap-2">
                 <div class="flex items-center gap-3">
-                    <!-- เปลี่ยนข้อความตามสั่ง -->
-                    <span class="bg-slate-900 text-white px-4 py-1 rounded-full text-xs font-black tracking-[0.05em]">10 อำเภอค่าฝุ่นสูงสุด</span>
+                    <span class="bg-red-600 text-white px-4 py-1 rounded-full text-xs font-black tracking-[0.05em] shadow-sm">10 อำเภอค่าฝุ่นสูงสุด</span>
                     <span id="dataStatusBadge" class="text-[10px] font-black uppercase text-slate-400"></span>
                 </div>
                 
@@ -192,41 +196,33 @@
                 </button>
             </div>
             
-            <!-- Container สำหรับแสดงผลหน้าเว็บ -->
-            <div id="top10WebContainer" class="flex flex-col gap-3 p-2">
+            <!-- Container สำหรับแสดงผลหน้าเว็บ (Web View - ใช้ Flexbox) -->
+            <div id="top10WebContainer" class="flex flex-col gap-3">
                 <!-- Data injected here -->
             </div>
         </div>
 
-        <!-- Control Center (Simplified) -->
-        <div class="bg-white p-8 rounded-[40px] shadow-xl shadow-slate-200/50 space-y-4 border border-white">
-            <!-- Fetch Status -->
-            <div id="fetchStatusContainer" class="text-center">
-                <div id="fetchSpinner" class="loading-spinner mx-auto mb-2 hidden"></div>
-                <p id="fetchStatus" class="text-sm font-bold text-slate-500">กำลังเตรียมพร้อม...</p>
-            </div>
-
-            <!-- Manual Input (Fallback) -->
-            <div class="space-y-2 pt-2 border-t border-slate-100">
-                <div class="flex items-center justify-between cursor-pointer" onclick="toggleManualInput()">
-                     <h3 class="font-bold text-slate-400 text-xs uppercase tracking-wider flex items-center gap-2">
-                        <span>🛠️ หากข้อมูลไม่ขึ้น ใช้วิธีวางโค้ด (Manual)</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                     </h3>
+        <!-- Fallback Control (Minimal) -->
+        <div class="bg-white p-6 rounded-[30px] shadow-sm border border-slate-100 mt-8">
+            <div class="flex items-center justify-between cursor-pointer" onclick="toggleManualInput()">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 bg-slate-300 rounded-full"></span>
+                    <h3 class="font-bold text-slate-400 text-xs uppercase tracking-wider">หากดึงข้อมูลไม่ได้? คลิกเพื่อวางโค้ดเอง (Manual)</h3>
                 </div>
-                
-                <div id="manualInputSection" class="hidden space-y-3 mt-2">
-                    <textarea id="htmlInput" rows="2" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[10px] focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="วางโค้ด HTML ที่นี่..."></textarea>
-                    <div class="flex gap-2">
-                        <button onclick="analyzeDust()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 py-2 rounded-xl transition text-xs w-full">ประมวลผลโค้ด</button>
-                        <button onclick="clearInput()" class="text-red-400 hover:text-red-600 font-bold px-4 py-2 text-xs border border-red-100 rounded-xl">ล้างค่า</button>
-                    </div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+            
+            <div id="manualInputSection" class="hidden space-y-3 mt-4 pt-4 border-t border-slate-100">
+                <textarea id="htmlInput" rows="2" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[10px] focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="วาง Source Code HTML ของตารางที่นี่..."></textarea>
+                <div class="flex gap-2 justify-end">
+                    <button onclick="clearInput()" class="text-red-400 hover:text-red-600 font-bold px-4 py-2 text-xs">ล้างค่า</button>
+                    <button onclick="analyzeDust()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-xl transition text-xs shadow-md">ประมวลผล</button>
                 </div>
             </div>
         </div>
 
         <!-- Full Ranking Table -->
-        <div id="fullListSection" class="hidden bg-white rounded-[32px] shadow-sm overflow-hidden border border-slate-100">
+        <div id="fullListSection" class="hidden bg-white rounded-[32px] shadow-sm overflow-hidden border border-slate-100 mt-6">
             <div class="p-6 border-b bg-slate-50/50 flex justify-between items-center">
                 <h3 class="font-black text-slate-700 uppercase tracking-widest text-sm">ตารางสรุปรายอำเภอทั้งหมด</h3>
                 <div class="flex gap-2" id="statsMini">
@@ -249,8 +245,10 @@
             </div>
         </div>
 
+        <div id="statusMessage" class="text-center mt-4 text-xs font-bold text-slate-400 min-h-[20px]"></div>
+
         <!-- Missing Alert -->
-        <div id="missingAlert" class="hidden bg-red-500 p-5 rounded-3xl text-white shadow-lg shadow-red-100">
+        <div id="missingAlert" class="hidden bg-red-500 p-5 rounded-3xl text-white shadow-lg shadow-red-100 mt-6">
             <div class="flex items-start gap-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                 <div>
@@ -261,7 +259,7 @@
         </div>
 
         <footer class="text-center py-12 opacity-40">
-            <p class="text-[10px] font-black uppercase tracking-[0.5em] text-slate-500">Chiang Mai Air Monitoring Console v11.0 (Auto Start)</p>
+            <p class="text-[10px] font-black uppercase tracking-[0.5em] text-slate-500">Chiang Mai Air Monitoring Console v11.0</p>
             <p class="text-[9px] font-bold text-slate-400 mt-2 tracking-widest">Data Source: CCDC (DustBoy) - Chiang Mai University</p>
         </footer>
     </div>
@@ -279,7 +277,7 @@
             return `จุดตรวจวัด : ${cleaned}`;
         };
 
-        // --- เริ่มต้นทำงานทันทีเมื่อโหลดหน้าเว็บ ---
+        // Auto Run on Load
         window.onload = function() {
             autoFetchData();
         };
@@ -290,12 +288,15 @@
         }
 
         async function autoFetchData() {
-            const statusEl = document.getElementById('fetchStatus');
+            const statusEl = document.getElementById('statusMessage');
             const spinner = document.getElementById('fetchSpinner');
+            const btn = document.getElementById('btnHeaderUpdate');
 
+            btn.disabled = true;
+            btn.classList.add('opacity-75');
             spinner.classList.remove('hidden');
             statusEl.innerText = "กำลังเชื่อมต่อกับเซิร์ฟเวอร์ (Bypassing Cache)...";
-            statusEl.className = "text-sm font-bold text-blue-500";
+            statusEl.className = "text-center mt-4 text-xs font-bold text-blue-500";
 
             const ts = Date.now();
             const targetUrl = `https://www.cmuccdc.org/hourly/38?t=${ts}`;
@@ -326,14 +327,14 @@
                 document.getElementById('htmlInput').value = htmlContent;
                 analyzeDust();
                 
-                statusEl.innerText = "✅ อัปเดตข้อมูลสำเร็จ (" + new Date().toLocaleTimeString('th-TH') + ")";
-                statusEl.className = "text-sm font-bold text-green-600";
+                statusEl.innerText = ""; // Clear status on success
             } catch (error) {
-                statusEl.innerText = "❌ ดึงข้อมูลอัตโนมัติไม่สำเร็จ กรุณาใช้ 'วิธีวางโค้ด' ด้านล่าง";
-                statusEl.className = "text-sm font-bold text-red-500";
-                // เปิดส่วน Manual อัตโนมัติถ้า Auto พัง
+                statusEl.innerText = "❌ ดึงข้อมูลอัตโนมัติไม่สำเร็จ กรุณาใช้วิธี Manual ด้านล่าง";
+                statusEl.className = "text-center mt-4 text-xs font-bold text-red-500";
                 document.getElementById('manualInputSection').classList.remove('hidden');
             } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-75');
                 spinner.classList.add('hidden');
             }
         }
@@ -392,7 +393,11 @@
             top10Container.innerHTML = ''; 
             tableBody.innerHTML = '';
 
+            let maxV = 0;
+
             data.forEach((item, i) => {
+                if (item.val > maxV) maxV = item.val;
+
                 let bgHex = "#0ea5e9"; 
                 if (item.val > 75) { bgHex = "#dc2626"; }
                 else if (item.val > 50) { bgHex = "#f97316"; }
@@ -451,6 +456,7 @@
             }
         }
 
+        // --- SAVE IMAGE LOGIC (Export Engine Only) ---
         function saveTop10Image() {
             const exportContainer = document.getElementById('hiddenExportContainer');
             exportContainer.innerHTML = ''; 
@@ -512,7 +518,7 @@
             document.getElementById('summarySection').classList.add('hidden');
             document.getElementById('fullListSection').classList.add('hidden');
             document.getElementById('missingAlert').classList.add('hidden');
-            document.getElementById('fetchStatus').innerText = '';
+            document.getElementById('statusMessage').innerText = '';
         }
     </script>
 </body>
