@@ -11,22 +11,30 @@
     <style>
         body { font-family: 'Sarabun', sans-serif; }
         
-        /* --- CSS สำหรับหน้าเว็บ (คงเดิม ห้ามแก้) --- */
+        /* --- CSS สำหรับหน้าเว็บ --- */
         .aqi-card-web {
             transition: transform 0.2s ease;
         }
         .aqi-card-web:hover {
             transform: scale(1.01);
         }
+        
+        /* Custom Utility for text wrapping */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            white-space: normal; /* อนุญาตให้ขึ้นบรรทัดใหม่ */
+        }
 
-        /* --- CSS สำหรับ Export รูปภาพเท่านั้น (Tuned V.38 - Spacing 8px & Unit 15px) --- */
+        /* --- CSS สำหรับ Export รูปภาพเท่านั้น (Tuned V.38) --- */
         #hiddenExportContainer {
             position: absolute;
             left: -9999px;
             top: 0;
             width: 1080px;
             background-color: transparent;
-            /* ใช้ฟอนต์ Prompt สำหรับภาพที่เซฟ */
             font-family: 'Prompt', sans-serif;
             font-feature-settings: "kern" 1, "liga" 1; 
         }
@@ -47,7 +55,7 @@
             padding: 0;
         }
 
-        /* 1. คอลัมน์ลำดับ (คงเดิม) */
+        /* 1. คอลัมน์ลำดับ */
         .exp-col-rank {
             width: 130px;
             text-align: center;
@@ -61,7 +69,7 @@
             top: -35px; 
         }
 
-        /* 2. คอลัมน์ข้อมูลตรงกลาง (คงเดิม) */
+        /* 2. คอลัมน์ข้อมูลตรงกลาง */
         .exp-col-info {
             text-align: left;
             padding-left: 10px;
@@ -116,7 +124,6 @@
             justify-content: flex-end;
         }
 
-        /* คำว่า PM2.5 (คงเดิม) */
         .exp-pm-label {
             font-size: 24px;
             font-weight: 700;
@@ -127,7 +134,6 @@
             top: 18px; 
         }
 
-        /* ตัวเลขค่าฝุ่น (คงเดิม) */
         .exp-val-num {
             font-size: 82px;
             font-weight: 800;
@@ -139,7 +145,6 @@
             top: -2px; 
         }
 
-        /* หน่วยวัด (คงเดิม 15px) */
         .exp-unit {
             font-size: 15px;
             font-weight: 600;
@@ -165,7 +170,6 @@
     <div class="max-w-5xl mx-auto space-y-6">
         
         <!-- Header -->
-        <!-- เปลี่ยน border-red-600 เป็น border-[#0074e4] (สีฟ้า CM108) -->
         <div class="bg-white p-6 rounded-3xl shadow-sm border-l-[16px] border-[#0074e4] flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex-1">
                 <h1 class="text-2xl md:text-4xl font-[900] text-slate-900 leading-none tracking-tighter uppercase">CHIANG MAI AIR</h1>
@@ -180,15 +184,13 @@
                 </button>
                 <div id="timeDisplay" class="hidden text-right bg-slate-50 px-4 py-1 rounded-lg border border-slate-100">
                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Update Time</p>
-                    <!-- เปลี่ยนสีเวลาให้เข้าธีมด้วยก็ได้ หรือคงไว้เป็นแดงเพื่อเน้น -->
                     <p id="timeValue" class="text-sm font-black text-slate-700"></p>
                 </div>
-                <!-- Spinner for Header -->
                 <div id="fetchSpinner" class="loading-spinner hidden"></div>
             </div>
         </div>
 
-        <!-- Dashboard Section: TOP 10 (Moved to Top) -->
+        <!-- Dashboard Section: TOP 10 -->
         <div id="summarySection" class="hidden space-y-4">
             <div class="flex flex-wrap items-center justify-between px-2 mb-2 gap-2">
                 <div class="flex items-center gap-3">
@@ -202,13 +204,12 @@
                 </button>
             </div>
             
-            <!-- Container สำหรับแสดงผลหน้าเว็บ (Web View - Responsive) -->
             <div id="top10WebContainer" class="flex flex-col gap-3">
                 <!-- Data injected here -->
             </div>
         </div>
 
-        <!-- Fallback Control (Minimal) -->
+        <!-- Fallback Control -->
         <div class="bg-white p-6 rounded-[30px] shadow-sm border border-slate-100 mt-8 opacity-60 hover:opacity-100 transition-opacity">
             <div class="flex items-center justify-between cursor-pointer" onclick="toggleManualInput()">
                 <div class="flex items-center gap-2">
@@ -227,7 +228,7 @@
             </div>
         </div>
 
-        <!-- Full Ranking Table -->
+        <!-- Full Ranking Table (Responsive & Adjusted for Mobile) -->
         <div id="fullListSection" class="hidden bg-white rounded-[32px] shadow-sm overflow-hidden border border-slate-100 mt-6">
             <div class="p-6 border-b bg-slate-50/50 flex flex-wrap justify-between items-center gap-2">
                 <h3 class="font-black text-slate-700 uppercase tracking-widest text-sm">ตารางสรุปรายอำเภอทั้งหมด</h3>
@@ -237,11 +238,9 @@
                 </div>
             </div>
             <div class="overflow-x-auto">
-                <!-- ลบ min-w เพื่อให้ตารางหดได้ในมือถือ -->
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                            <!-- ปรับ padding ให้เล็กลงในมือถือ -->
                             <th class="py-4 px-2 md:px-8 text-center w-10 md:w-16">#</th>
                             <th class="py-4 px-2 md:px-6">อำเภอ</th>
                             <th class="py-4 px-2 md:px-6">จุดตรวจวัด</th>
@@ -267,25 +266,29 @@
         </div>
 
         <footer class="text-center py-12 opacity-40">
-            <p class="text-[10px] font-black uppercase tracking-[0.5em] text-slate-500">Chiang Mai Air Monitoring Console v12.1 (CM108 Blue Theme)</p>
+            <p class="text-[10px] font-black uppercase tracking-[0.5em] text-slate-500">Chiang Mai Air Monitoring Console v12.2 (Mobile Table Fix)</p>
             <p class="text-[9px] font-bold text-slate-400 mt-2 tracking-widest">Data Source: CCDC (DustBoy) - Chiang Mai University</p>
         </footer>
     </div>
 
-    <!-- Hidden Export Container (ใช้ Table เพื่อความแม่นยำตอน Save) -->
+    <!-- Hidden Export Container -->
     <div id="hiddenExportContainer"></div>
 
     <script>
         const allDistricts = ["เมืองเชียงใหม่", "จอมทอง", "แม่แจ่ม", "เชียงดาว", "ดอยสะเก็ด", "แม่แตง", "แม่ริม", "สะเมิง", "ฝาง", "แม่อาย", "พร้าว", "สันป่าตอง", "สันกำแพง", "สันทราย", "หางดง", "ฮอด", "ดอยเต่า", "อมก๋อย", "สารภี", "เวียงแหง", "ไชยปราการ", "แม่วาง", "แม่ออน", "ดอยหล่อ", "กัลยาณิวัฒนา"];
         let currentResultData = [];
 
-        const formatLocation = (loc) => {
+        // ฟังก์ชันล้างชื่อสำหรับตาราง (เอา อ. จ. ออก)
+        const cleanLocationName = (loc) => {
             if (!loc) return "";
-            let cleaned = loc.replace(/\s*(?:อ\.|อำเภอ|จ\.|จังหวัด)\s*[ก-๙]+/g, '').trim();
-            return `จุดตรวจวัด : ${cleaned}`;
+            return loc.replace(/\s*(?:อ\.|อำเภอ|จ\.|จังหวัด)\s*[ก-๙]+/g, '').trim();
         };
 
-        // Auto Run on Load
+        // ฟังก์ชันสำหรับ Export/Card (เติมคำว่า "จุดตรวจวัด :")
+        const formatLocation = (loc) => {
+            return `จุดตรวจวัด : ${cleanLocationName(loc)}`;
+        };
+
         window.onload = function() {
             autoFetchData();
         };
@@ -335,7 +338,7 @@
                 document.getElementById('htmlInput').value = htmlContent;
                 analyzeDust();
                 
-                statusEl.innerText = ""; // Clear status on success
+                statusEl.innerText = "";
             } catch (error) {
                 statusEl.innerText = "❌ ดึงข้อมูลอัตโนมัติไม่สำเร็จ กรุณาใช้วิธี Manual ด้านล่าง";
                 statusEl.className = "text-center mt-4 text-xs font-bold text-red-500";
@@ -401,31 +404,15 @@
             top10Container.innerHTML = ''; 
             tableBody.innerHTML = '';
 
-            let maxV = 0;
-
             data.forEach((item, i) => {
-                if (item.val > maxV) maxV = item.val;
-
                 let bgHex = "#0ea5e9"; 
-                let badgeClass = "bg-blue-100 text-blue-600";
-                
-                if (item.val > 75) {
-                    bgHex = "#dc2626"; 
-                    badgeClass = "bg-red-100 text-red-600";
-                } else if (item.val > 50) {
-                    bgHex = "#f97316"; 
-                    badgeClass = "bg-orange-100 text-orange-600";
-                } else if (item.val > 37) {
-                    bgHex = "#facc15"; 
-                    badgeClass = "bg-yellow-100 text-yellow-700";
-                } else if (item.val > 25) {
-                    bgHex = "#22c55e"; 
-                    badgeClass = "bg-green-100 text-green-700";
-                }
+                if (item.val > 75) { bgHex = "#dc2626"; }
+                else if (item.val > 50) { bgHex = "#f97316"; }
+                else if (item.val > 37) { bgHex = "#facc15"; }
+                else if (item.val > 25) { bgHex = "#22c55e"; }
 
                 let textCol = (item.val > 37 && item.val <= 50) ? "text-slate-900" : "text-white";
 
-                // 1. Render Top 10 (Web Version - Responsive Mobile Friendly)
                 if (i < 10) {
                     top10Container.innerHTML += `
                         <div style="background-color: ${bgHex};" class="aqi-card-web flex items-center ${textCol} px-4 md:px-6 py-3 md:py-4 rounded-2xl md:rounded-[24px] shadow-sm overflow-hidden box-border h-auto min-h-[80px] md:h-[100px] relative mb-3">
@@ -448,13 +435,15 @@
                         </div>`;
                 }
 
-                // 2. Render Full Table (Responsive Fix)
+                let badgeClass = item.val > 75 ? "bg-red-100 text-red-600" : item.val > 50 ? "bg-orange-100 text-orange-600" : item.val > 37 ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700";
+
+                // แก้ไขตารางสำหรับมือถือ: ลบ "จุดตรวจวัด :", เพิ่ม line-clamp-2, และ text-wrap
                 tableBody.innerHTML += `
                     <tr class="border-b hover:bg-slate-50 transition">
                         <td class="py-3 px-3 md:px-6 text-center font-bold text-slate-400 text-xs md:text-base">${i+1}</td>
-                        <td class="py-3 px-3 md:px-6 font-bold text-slate-700 text-sm md:text-lg">อ.${item.name}</td>
-                        <td class="py-3 px-3 md:px-6 text-[10px] md:text-[11px] text-slate-400 max-w-[120px] md:max-w-xs truncate">${formatLocation(item.location)}</td>
-                        <td class="py-3 px-3 md:px-6 text-center"><span class="${badgeClass} py-1 px-2 md:px-3 rounded-full font-black text-[10px] md:text-xs">${item.val}</span></td>
+                        <td class="py-3 px-2 md:px-6 font-bold text-slate-700 text-sm md:text-lg whitespace-nowrap">อ.${item.name}</td>
+                        <td class="py-3 px-2 md:px-6 text-[10px] md:text-[11px] text-slate-400 max-w-[120px] md:max-w-xs line-clamp-2 leading-tight">${cleanLocationName(item.location)}</td>
+                        <td class="py-3 px-1 md:px-6 text-center"><span class="${badgeClass} py-1 px-2 md:px-3 rounded-full font-black text-[10px] md:text-xs">${item.val}</span></td>
                     </tr>`;
             });
 
@@ -475,7 +464,7 @@
             }
         }
 
-        // --- SAVE IMAGE LOGIC (Export Engine Only) ---
+        // --- SAVE IMAGE LOGIC (Export Engine) ---
         function saveTop10Image() {
             const exportContainer = document.getElementById('hiddenExportContainer');
             exportContainer.innerHTML = ''; 
