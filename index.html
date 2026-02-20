@@ -565,13 +565,13 @@
             let rawJsonText = null;
 
             try {
+                statusEl.innerText = `กำลังดึงข้อมูลแบบคู่ขนาน (Parallel Race)...`;
+                
+                // 1. ดึงข้อมูลแบบรวม (Bulk) โดยแข่งกันทุก Proxy และทุก Endpoint พร้อมกัน (เร็วกว่าเดิมมาก)
+                const bulkPromises = [];
                 for (let ep of bulkEndpoints) {
-                    if(rawJsonText) break;
-                    for (let i = 0; i < proxyList.length; i++) {
-                        try {
-                            const proxy = proxyList[i];
-                            statusEl.innerText = `กำลังดึงข้อมูลแบบรวม (ช่องทางที่ ${i + 1}/${proxyList.length})...`;
-                            
+                    for (let proxy of proxyList) {
+                        bulkPromises.push((async () => {
                             const res = await fetch(proxy.url(ep), { cache: 'no-store' });
                             if (res.ok) {
                                 let text = await res.text();
@@ -579,15 +579,24 @@
                                     try { text = JSON.parse(text).contents || ""; } catch(e) { text = ""; }
                                 }
                                 if (text && text.length > 50 && !text.includes('errMsg')) {
-                                    rawJsonText = text; break; 
+                                    return text; 
                                 }
                             }
-                        } catch (e) { }
+                            throw new Error("Invalid or failed");
+                        })());
                     }
                 }
 
+                try {
+                    // ใช้ Promise.any เพื่อเอาตัวที่โหลดสำเร็จตัวแรกทันที ไม่ต้องรอตัวที่ค้าง
+                    rawJsonText = await Promise.any(bulkPromises);
+                } catch (e) {
+                    rawJsonText = null;
+                }
+
+                // 2. ถ้าดึงแบบรวมไม่สำเร็จ (เซิร์ฟเวอร์ GISTDA ล่มแบบกลุ่ม) ค่อยดึงทีละอำเภอแบบคู่ขนาน
                 if (!rawJsonText) {
-                    statusEl.innerText = "เซิร์ฟเวอร์บังคับใช้รหัสอำเภอ กำลังดึงข้อมูลทีละอำเภอ (25 รอบ)...";
+                    statusEl.innerText = "เซิร์ฟเวอร์รวมล่ม กำลังดึงข้อมูลทีละอำเภอ...";
                     let combinedData = [];
                     
                     for (let i = 0; i < cmAmphoeCodes.length; i += 5) {
