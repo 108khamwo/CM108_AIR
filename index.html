@@ -102,7 +102,7 @@
                 </button>
             </div>
             
-            <div id="top10WebContainer" class="flex flex-col gap-3">
+            <div id="top10WebContainer" class="flex flex-col gap-1.5 md:gap-3">
                 <!-- Data injected here -->
             </div>
         </div>
@@ -462,7 +462,7 @@
 
                 if (i < 10) {
                     top10Container.innerHTML += `
-                        <div style="background-color: ${bgHex};" class="aqi-card-web flex items-center ${webTextClass} px-4 md:px-6 py-3 md:py-4 rounded-2xl md:rounded-[24px] shadow-sm h-auto min-h-[80px] md:h-[100px] relative mb-3">
+                        <div style="background-color: ${bgHex};" class="aqi-card-web flex items-center ${webTextClass} px-4 md:px-6 py-3 md:py-4 rounded-2xl md:rounded-[24px] shadow-sm h-auto min-h-[80px] md:h-[100px] relative">
                             <div class="w-10 md:w-16 flex-shrink-0 text-center mr-2 md:mr-4">
                                 <span class="text-4xl md:text-6xl font-black opacity-30 leading-none">${i+1}</span>
                             </div>
@@ -729,7 +729,7 @@
 
                 if (i < 10) {
                     top10Container.innerHTML += `
-                        <div style="background-color: ${bgHex};" class="aqi-card-web flex items-center ${textCol} px-4 md:px-6 py-3 md:py-4 rounded-2xl md:rounded-[24px] shadow-sm overflow-hidden box-border h-auto min-h-[80px] md:h-[100px] relative mb-3">
+                        <div style="background-color: ${bgHex};" class="aqi-card-web flex items-center ${textCol} px-4 md:px-6 py-3 md:py-4 rounded-2xl md:rounded-[24px] shadow-sm overflow-hidden box-border h-auto min-h-[80px] md:h-[100px] relative">
                             <div class="w-10 md:w-16 flex-shrink-0 text-center mr-2 md:mr-4">
                                 <span class="text-4xl md:text-6xl font-black opacity-30 leading-none block">${i+1}</span>
                             </div>
