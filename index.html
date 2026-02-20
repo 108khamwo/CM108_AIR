@@ -3,187 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบวิเคราะห์ฝุ่นรายอำเภอ เชียงใหม่</title>
+    <title>ระบบรายงานค่าฝุ่น "จ.เชียงใหม่" (CCDC & GISTDA)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- เพิ่มฟอนต์ Prompt สำหรับ Export Engine -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800;900&family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Sarabun', sans-serif; }
         
-        /* --- CSS สำหรับหน้าเว็บ (คงเดิม ห้ามแก้) --- */
-        .aqi-card-web {
-            transition: transform 0.2s ease;
-        }
-        .aqi-card-web:hover {
-            transform: scale(1.01);
-        }
-        
-        /* Custom Utility for text wrapping */
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            white-space: normal; 
-        }
+        /* --- CSS สำหรับหน้าเว็บ --- */
+        .aqi-card-web { transition: transform 0.2s ease; }
+        .aqi-card-web:hover { transform: scale(1.01); }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }
 
-        /* --- CSS สำหรับ Export รูปภาพเท่านั้น (Tuned V.41 - Location Font Size 22px) --- */
+        /* --- CSS สำหรับ Export รูปภาพเท่านั้น --- */
         #hiddenExportContainer {
-            position: absolute;
-            left: -9999px;
-            top: 0;
-            width: 1080px;
-            background-color: transparent;
-            /* ใช้ฟอนต์ Prompt สำหรับภาพที่เซฟ */
-            font-family: 'Prompt', sans-serif;
+            position: absolute; left: -9999px; top: 0; width: 1080px;
+            background-color: transparent; font-family: 'Prompt', sans-serif;
             font-feature-settings: "kern" 1, "liga" 1; 
         }
-
         .export-table-row {
-            width: 100%;
-            height: 120px;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin-bottom: 8px;
-            border-radius: 60px;
-            color: white;
-            table-layout: fixed;
+            width: 100%; height: 120px; border-collapse: separate; border-spacing: 0;
+            margin-bottom: 8px; border-radius: 60px; color: white; table-layout: fixed;
         }
-
-        .export-table-row td {
-            vertical-align: middle;
-            padding: 0;
-        }
-
-        /* 1. คอลัมน์ลำดับ (คงเดิม) */
+        .export-table-row td { vertical-align: middle; padding: 0; }
         .exp-col-rank {
-            width: 130px;
-            text-align: center;
-            font-size: 85px; 
-            font-weight: 800;
-            opacity: 0.6;
-            line-height: 1;
-            padding-left: 20px !important;
-            padding-bottom: 0; 
-            position: relative;
-            top: -35px; 
+            width: 130px; text-align: center; font-size: 85px; font-weight: 800;
+            opacity: 0.6; line-height: 1; padding-left: 20px !important; padding-bottom: 0; 
+            position: relative; top: -35px; 
         }
-
-        /* 2. คอลัมน์ข้อมูลตรงกลาง (คงเดิม) */
-        .exp-col-info {
-            text-align: left;
-            padding-left: 10px;
-            overflow: visible;
-            vertical-align: middle;
-        }
-
-        .exp-district {
-            font-size: 48px; 
-            font-weight: 700;
-            line-height: 1.1;
-            display: block;
-            margin-top: -30px; 
-            margin-bottom: 8px;
-            white-space: nowrap;
-            position: relative;
-        }
-
-        /* แก้ไขขนาดตัวหนังสือจุดตรวจวัด */
-        .exp-location {
-            font-size: 22px; /* ปรับลดจาก 24px เป็น 22px ตามสั่ง */
-            font-weight: 500;
-            opacity: 0.95;
-            display: block;
-            white-space: nowrap;
-            overflow: visible;
-            text-overflow: clip;
-            line-height: 1.5;
-            padding-bottom: 8px;
-            margin-top: 10px; 
-        }
-
-        /* 3. คอลัมน์ค่าฝุ่น (คงเดิม) */
-        .exp-col-value {
-            width: 480px; 
-            text-align: right;
-            padding-right: 60px !important;
-            vertical-align: middle;
-        }
-
-        .exp-value-group {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: flex-end;
-            justify-content: center;
-            position: relative;
-            top: -30px; 
-        }
-
-        .exp-val-row {
-            display: flex;
-            align-items: flex-start; 
-            justify-content: flex-end;
-        }
-
-        .exp-pm-label {
-            font-size: 24px;
-            font-weight: 700;
-            opacity: 0.4;
-            margin-right: 15px;
-            text-transform: uppercase;
-            position: relative;
-            top: 18px; 
-        }
-
-        .exp-val-num {
-            font-size: 82px;
-            font-weight: 800;
-            line-height: 1;
-            display: inline-block;
-            width: 150px; 
-            text-align: right;
-            position: relative;
-            top: -2px; 
-        }
-
-        .exp-unit {
-            font-size: 15px;
-            font-weight: 600;
-            opacity: 0.9;
-            margin-top: 0px; 
-            position: relative;
-            top: 15px; 
-        }
+        .exp-col-info { text-align: left; padding-left: 10px; overflow: visible; vertical-align: middle; }
+        
+        /* District & Location styles are applied inline in JS to handle CCDC/GISTDA differences */
+        .exp-district { font-weight: 700; line-height: 1.1; display: block; margin-bottom: 0; white-space: nowrap; position: relative; }
+        .exp-location { font-weight: 500; opacity: 0.85; display: block; white-space: nowrap; overflow: visible; text-overflow: clip; line-height: 1.5; padding-bottom: 8px; margin-top: 10px; }
+        
+        .exp-col-value { width: 480px; text-align: right; padding-right: 60px !important; vertical-align: middle; }
+        .exp-value-group { display: inline-flex; flex-direction: column; align-items: flex-end; justify-content: center; position: relative; top: -30px; }
+        .exp-val-row { display: flex; align-items: flex-start; justify-content: flex-end; }
+        .exp-pm-label { font-size: 24px; font-weight: 700; opacity: 0.4; margin-right: 15px; text-transform: uppercase; position: relative; top: 18px; }
+        .exp-val-num { font-size: 82px; font-weight: 800; line-height: 1; display: inline-block; text-align: right; position: relative; top: -2px; }
+        .exp-unit { font-size: 15px; font-weight: 600; opacity: 0.9; margin-top: 0px; position: relative; top: 15px; }
 
         .loading-spinner {
-            border: 3px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 3px solid #3498db;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
+            border: 3px solid #f3f3f3; border-radius: 50%; border-top: 3px solid #3498db;
+            width: 20px; height: 20px; animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ตัวสลับโหมด */
+        .toggle-btn { transition: all 0.3s ease; }
+        .toggle-active-ccdc { background-color: #0074e4; color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .toggle-active-gistda { background-color: #0ea5e9; color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen p-4 md:p-8">
 
     <div class="max-w-5xl mx-auto space-y-6">
+
+        <!-- ตัวสลับระบบ (Toggle Switch) -->
+        <div class="flex justify-center mb-2">
+            <div class="bg-white p-1.5 rounded-2xl flex space-x-1 shadow-sm border border-slate-200">
+                <button id="btnModeCCDC" onclick="switchMode('CCDC')" class="toggle-btn toggle-active-ccdc px-6 py-2 rounded-xl font-bold text-sm">จุดตรวจวัด (CCDC)</button>
+                <button id="btnModeGISTDA" onclick="switchMode('GISTDA')" class="toggle-btn text-slate-500 hover:text-slate-700 px-6 py-2 rounded-xl font-bold text-sm">ดาวเทียม (GISTDA)</button>
+            </div>
+        </div>
         
         <!-- Header -->
-        <div class="bg-white p-6 rounded-3xl shadow-sm border-l-[16px] border-[#0074e4] flex flex-col md:flex-row justify-between items-center gap-4">
+        <div id="headerContainer" class="bg-white p-6 rounded-3xl shadow-sm border-l-[16px] border-[#0074e4] flex flex-col md:flex-row justify-between items-center gap-4 transition-colors duration-300">
             <div class="flex-1">
-                <h1 class="text-2xl md:text-4xl font-[900] text-slate-900 leading-none tracking-tighter uppercase">CHIANG MAI AIR</h1>
-                <p class="text-slate-500 font-bold mt-1 uppercase tracking-widest text-xs">District Ranking Monitor</p>
+                <h1 id="headerTitle" class="text-2xl md:text-4xl font-[900] text-slate-900 leading-none tracking-tighter uppercase">ระบบรายงานค่าฝุ่น "จ.เชียงใหม่"</h1>
+                <p id="headerSubtitle" class="text-slate-500 font-bold mt-1 uppercase tracking-widest text-xs">อ้างอิงจากจุดตรวจวัดในพื้นที่ (CCDC)</p>
             </div>
             
-            <!-- Update Button & Status -->
-            <!-- แก้ไข: เปลี่ยน items-end เป็น items-center md:items-end เพื่อให้บนมือถืออยู่ตรงกลาง -->
             <div class="flex flex-col items-center md:items-end gap-2">
-                <button onclick="autoFetchData()" id="btnHeaderUpdate" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-5 rounded-xl shadow-md transition flex items-center gap-2 text-sm">
+                <button onclick="forceUpdate()" id="btnHeaderUpdate" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition flex items-center gap-2 text-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                    <span>อัปเดตข้อมูลล่าสุด</span>
+                    <span id="updateBtnText">อัปเดตข้อมูลล่าสุด</span>
                 </button>
                 <div id="timeDisplay" class="hidden text-right bg-slate-50 px-4 py-1 rounded-lg border border-slate-100">
                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Update Time</p>
@@ -197,7 +92,7 @@
         <div id="summarySection" class="hidden space-y-4">
             <div class="flex flex-wrap items-center justify-between px-2 mb-2 gap-2">
                 <div class="flex items-center gap-3">
-                    <span class="bg-red-600 text-white px-4 py-1 rounded-full text-xs font-black tracking-[0.05em] shadow-sm">10 อำเภอค่าฝุ่นสูงสุด</span>
+                    <span class="bg-red-600 text-white px-4 py-1 rounded-full text-xs font-black tracking-[0.05em] shadow-sm">10 อันดับค่าฝุ่นสูงสุด</span>
                     <span id="dataStatusBadge" class="text-[10px] font-black uppercase text-slate-400"></span>
                 </div>
                 
@@ -212,29 +107,31 @@
             </div>
         </div>
 
-        <!-- Fallback Control -->
-        <div class="bg-white p-6 rounded-[30px] shadow-sm border border-slate-100 mt-8 opacity-60 hover:opacity-100 transition-opacity">
+        <!-- Fallback Control (Manual Input) -->
+        <div id="manualPanel" class="bg-white p-6 rounded-[30px] shadow-sm border border-slate-100 mt-6 opacity-40 hover:opacity-100 transition-opacity">
             <div class="flex items-center justify-between cursor-pointer" onclick="toggleManualInput()">
                 <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 bg-slate-300 rounded-full"></span>
-                    <h3 class="font-bold text-slate-400 text-xs uppercase tracking-wider">หากดึงข้อมูลไม่ได้? คลิกเพื่อวางโค้ดเอง (Manual)</h3>
+                    <div class="w-2 h-2 bg-slate-400 rounded-full"></div>
+                    <h3 id="manualTitle" class="font-bold text-slate-400 text-xs uppercase tracking-wider">ประมวลผลด้วย Source Code (Manual)</h3>
                 </div>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                <svg id="arrowManual" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
             </div>
             
-            <div id="manualInputSection" class="hidden space-y-3 mt-4 pt-4 border-t border-slate-100">
-                <textarea id="htmlInput" rows="2" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-[10px] focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="วาง Source Code HTML ของตารางที่นี่..."></textarea>
+            <div id="manualInputSection" class="hidden space-y-4 mt-4 pt-4 border-t border-slate-100">
+                <p id="manualHelper" class="hidden text-[10px] text-slate-500 font-bold">ถ้าดึงอัตโนมัติไม่ขึ้น ให้ไปที่ <a href="https://pm25.gistda.or.th/rest/getPM25byAmphoe24hrs?prov_idn=50" target="_blank" class="text-blue-500 underline">ลิงก์ GISTDA API นี้</a> แล้ว Copy ข้อความทั้งหมดมาวางด้านล่าง</p>
+                <textarea id="htmlInput" rows="2" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-[10px] focus:ring-2 focus:ring-blue-500 outline-none" placeholder="วาง Source Code HTML จากหน้าเว็บ CCDC ที่นี่..."></textarea>
+                
                 <div class="flex gap-2 justify-end">
                     <button onclick="clearInput()" class="text-red-400 hover:text-red-600 font-bold px-4 py-2 text-xs">ล้างค่า</button>
-                    <button onclick="analyzeDust()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-xl transition text-xs shadow-md">ประมวลผล</button>
+                    <button onclick="processManualInput()" id="btnProcessManual" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 py-2 rounded-xl text-xs uppercase shadow-md transition">ประมวลผลจาก HTML</button>
                 </div>
             </div>
         </div>
 
-        <!-- Full Ranking Table (Responsive Fixed - Line Wrap Enabled) -->
+        <!-- Full Ranking Table -->
         <div id="fullListSection" class="hidden bg-white rounded-[32px] shadow-sm overflow-hidden border border-slate-100 mt-6">
             <div class="p-6 border-b bg-slate-50/50 flex flex-wrap justify-between items-center gap-2">
-                <h3 class="font-black text-slate-700 uppercase tracking-widest text-sm">ตารางสรุปรายอำเภอทั้งหมด</h3>
+                <h3 id="tableTitle" class="font-black text-slate-700 uppercase tracking-widest text-sm">ตารางสรุปรายอำเภอ</h3>
                 <div class="flex gap-2" id="statsMini">
                     <span id="miniFound" class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full uppercase"></span>
                     <span id="miniMissing" class="text-[10px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase"></span>
@@ -243,11 +140,8 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                            <th class="py-4 px-2 md:px-8 text-center w-10 md:w-16">#</th>
-                            <th class="py-4 px-2 md:px-6">อำเภอ</th>
-                            <th class="py-4 px-2 md:px-6">จุดตรวจวัด</th>
-                            <th class="py-4 px-2 md:px-6 text-center">PM2.5</th>
+                        <tr id="tableHeaderRow" class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                            <!-- Dynamic Headers -->
                         </tr>
                     </thead>
                     <tbody id="fullTableBody" class="text-slate-600"></tbody>
@@ -269,8 +163,8 @@
         </div>
 
         <footer class="text-center py-12 opacity-40">
-            <p class="text-[10px] font-black uppercase tracking-[0.5em] text-slate-500">Chiang Mai Air Monitoring Console v13.5 (Font Size Tuned)</p>
-            <p class="text-[9px] font-bold text-slate-400 mt-2 tracking-widest">Data Source: CCDC (DustBoy) - Chiang Mai University</p>
+            <p class="text-[10px] font-black uppercase tracking-[0.5em] text-slate-500">Chiang Mai Air Monitoring Console (Unified)</p>
+            <p id="footerSource" class="text-[9px] font-bold text-slate-400 mt-2 tracking-widest">Powered by CMU CCDC Hourly Data Source</p>
         </footer>
     </div>
 
@@ -279,181 +173,127 @@
 
     <script>
         const allDistricts = ["เมืองเชียงใหม่", "จอมทอง", "แม่แจ่ม", "เชียงดาว", "ดอยสะเก็ด", "แม่แตง", "แม่ริม", "สะเมิง", "ฝาง", "แม่อาย", "พร้าว", "สันป่าตอง", "สันกำแพง", "สันทราย", "หางดง", "ฮอด", "ดอยเต่า", "อมก๋อย", "สารภี", "เวียงแหง", "ไชยปราการ", "แม่วาง", "แม่ออน", "ดอยหล่อ", "กัลยาณิวัฒนา"];
-        let currentResultData = [];
+        const cmAmphoeCodes = ["5001","5002","5003","5004","5005","5006","5007","5008","5009","5010","5011","5012","5013","5014","5015","5016","5017","5018","5019","5020","5021","5022","5023","5024","5025"];
+        
+        const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbwzfx6uMAVR0b45YUtmQepYJEjmmLTP-siGf2ybxYRrVAP_qxUFvu-E3xj9f9o8fP0WMQ/exec";
 
-        // ฟังก์ชันล้างชื่อสำหรับตาราง (เอา อ. จ. ออก)
-        const cleanLocationName = (loc) => {
-            if (!loc) return "";
-            return loc.replace(/\s*(?:อ\.|อำเภอ|จ\.|จังหวัด)\s*[ก-๙]+/g, '').trim();
-        };
-
-        // ฟังก์ชันสำหรับ Export/Card (เติมคำว่า "จุดตรวจวัด :")
-        const formatLocation = (loc) => {
-            return `จุดตรวจวัด : ${cleanLocationName(loc)}`;
+        let currentMode = 'CCDC'; 
+        let cache = {
+            CCDC: { data: null, updateTime: '', rawInput: '' },
+            GISTDA: { data: null, updateTime: '', rawInput: '' }
         };
 
         window.onload = function() {
-            autoFetchData();
+            switchMode('CCDC');
         };
 
-        function toggleManualInput() {
-            const section = document.getElementById('manualInputSection');
-            section.classList.toggle('hidden');
-        }
-
-        async function autoFetchData() {
-            const statusEl = document.getElementById('statusMessage');
-            const spinner = document.getElementById('fetchSpinner');
-            const btn = document.getElementById('btnHeaderUpdate');
-
-            btn.disabled = true;
-            btn.classList.add('opacity-75');
-            spinner.classList.remove('hidden');
-            statusEl.innerText = "กำลังเชื่อมต่อกับเซิร์ฟเวอร์ (Bypassing Cache)...";
-            statusEl.className = "text-center mt-4 text-xs font-bold text-blue-500";
-
-            const ts = Date.now();
-            const targetUrl = `https://www.cmuccdc.org/hourly/38?t=${ts}`;
-            let htmlContent = null;
-
-            try {
-                try {
-                    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, {
-                        cache: 'no-store',
-                        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-                    });
-                    if (res.ok) htmlContent = await res.text();
-                } catch (e) { console.warn("Primary Proxy failed"); }
-
-                if (!htmlContent || htmlContent.length < 500) {
-                    statusEl.innerText = "กำลังลองช่องทางสำรอง...";
-                    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&timestamp=${ts}`, {
-                         cache: 'no-store'
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        htmlContent = data.contents;
-                    }
-                }
-
-                if (!htmlContent || htmlContent.length < 500) throw new Error("Fetch failed");
-
-                document.getElementById('htmlInput').value = htmlContent;
-                analyzeDust();
-                
-                statusEl.innerText = "";
-            } catch (error) {
-                statusEl.innerText = "❌ ดึงข้อมูลอัตโนมัติไม่สำเร็จ กรุณาใช้วิธี Manual ด้านล่าง";
-                statusEl.className = "text-center mt-4 text-xs font-bold text-red-500";
-                document.getElementById('manualInputSection').classList.remove('hidden');
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove('opacity-75');
-                spinner.classList.add('hidden');
-            }
-        }
-
-        function analyzeDust() {
-            const rawHtml = document.getElementById('htmlInput').value;
-            if (!rawHtml.trim()) return;
-
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(rawHtml, 'text/html');
-
-            let updateTime = "";
-            doc.querySelectorAll('p').forEach(p => {
-                if (p.innerText.includes("อัพเดทข้อมูลเมื่อ")) {
-                    updateTime = p.innerText.replace("อัพเดทข้อมูลเมื่อ :", "").trim();
-                }
-            });
-
-            if (updateTime) {
-                document.getElementById('timeValue').innerText = updateTime;
-                document.getElementById('timeDisplay').classList.remove('hidden');
-            }
-
-            const districtMap = {};
-            doc.querySelectorAll('tr').forEach(row => {
-                const nameEl = row.querySelector('.db_namez');
-                const valEl = row.querySelector('.c_value');
-                if (nameEl && valEl) {
-                    const fullName = nameEl.innerText.trim();
-                    const value = parseInt(valEl.innerText.trim());
-                    const amphoeMatch = fullName.match(/(?:อ\.|อำเภอ)\s*([ก-๙]+)/);
-                    if (amphoeMatch) {
-                        let aName = amphoeMatch[1].trim();
-                        if (aName === "เมือง") aName = "เมืองเชียงใหม่";
-                        if (!districtMap[aName] || value > districtMap[aName].val) {
-                            districtMap[aName] = { val: value, loc: fullName };
-                        }
-                    }
-                }
-            });
-
-            currentResultData = Object.keys(districtMap).map(k => ({ 
-                name: k, 
-                val: districtMap[k].val, 
-                location: districtMap[k].loc 
-            }));
-            currentResultData.sort((a, b) => b.val - a.val);
-
-            renderDisplay(currentResultData);
-        }
-
-        function renderDisplay(data) {
-            const top10Container = document.getElementById('top10WebContainer'); 
-            const tableBody = document.getElementById('fullTableBody');
+        // ==========================================
+        // ROUTER SYSTEM (สลับโหมด)
+        // ==========================================
+        function switchMode(mode) {
+            currentMode = mode;
             
-            top10Container.innerHTML = ''; 
-            tableBody.innerHTML = '';
+            const btnCCDC = document.getElementById('btnModeCCDC');
+            const btnGISTDA = document.getElementById('btnModeGISTDA');
+            const headerContainer = document.getElementById('headerContainer');
+            const tableHeaderRow = document.getElementById('tableHeaderRow');
+            
+            if (mode === 'CCDC') {
+                btnCCDC.className = 'toggle-btn toggle-active-ccdc px-6 py-2 rounded-xl font-bold text-sm';
+                btnGISTDA.className = 'toggle-btn text-slate-500 hover:text-slate-700 px-6 py-2 rounded-xl font-bold text-sm bg-transparent shadow-none';
+                
+                headerContainer.classList.remove('border-[#0ea5e9]');
+                headerContainer.classList.add('border-[#0074e4]');
+                document.getElementById('headerTitle').innerText = 'ระบบรายงานค่าฝุ่น "จ.เชียงใหม่"';
+                document.getElementById('headerSubtitle').innerText = 'อ้างอิงจากจุดตรวจวัดในพื้นที่ (CCDC)';
+                
+                document.getElementById('updateBtnText').innerText = 'อัปเดตข้อมูลล่าสุด';
+                document.getElementById('manualTitle').innerText = 'ประมวลผลด้วย Source Code (Manual)';
+                document.getElementById('htmlInput').placeholder = 'วาง Source Code HTML จากหน้าเว็บ CCDC ที่นี่...';
+                document.getElementById('btnProcessManual').innerText = 'ประมวลผลจาก HTML';
+                document.getElementById('manualHelper').classList.add('hidden');
+                
+                document.getElementById('tableTitle').innerText = 'ตารางสรุปรายอำเภอ';
+                document.getElementById('footerSource').innerText = 'Powered by CMU CCDC Hourly Data Source';
+                
+                tableHeaderRow.innerHTML = `
+                    <th class="py-4 px-8 text-center w-16">#</th>
+                    <th class="py-4 px-6">อำเภอ</th>
+                    <th class="py-4 px-6">จุดตรวจวัดหลัก</th>
+                    <th class="py-4 px-6 text-center">PM2.5</th>
+                `;
+            } else {
+                btnGISTDA.className = 'toggle-btn toggle-active-gistda px-6 py-2 rounded-xl font-bold text-sm';
+                btnCCDC.className = 'toggle-btn text-slate-500 hover:text-slate-700 px-6 py-2 rounded-xl font-bold text-sm bg-transparent shadow-none';
+                
+                headerContainer.classList.remove('border-[#0ea5e9]');
+                headerContainer.classList.add('border-[#0074e4]');
+                document.getElementById('headerTitle').innerText = 'ระบบรายงานค่าฝุ่น "จ.เชียงใหม่"';
+                document.getElementById('headerSubtitle').innerText = 'อ้างอิงจาก AI ดาวเทียม (GISTDA)';
+                
+                document.getElementById('updateBtnText').innerText = 'อัปเดตข้อมูลล่าสุด';
+                document.getElementById('manualTitle').innerText = 'หากดึงข้อมูลไม่ได้? คลิกเพื่อวางโค้ด JSON เอง (Manual)';
+                document.getElementById('htmlInput').placeholder = 'วางข้อมูล JSON จาก GISTDA API ที่นี่...';
+                document.getElementById('btnProcessManual').innerText = 'ประมวลผล';
+                document.getElementById('manualHelper').classList.remove('hidden');
+                
+                document.getElementById('tableTitle').innerText = 'ตารางสรุปรายอำเภอทั้งหมด (ข้อมูลดาวเทียม)';
+                document.getElementById('footerSource').innerText = 'Data Source: pm25.gistda.or.th (ข้อมูลประมวลผลจากดาวเทียม)';
 
-            let maxV = 0;
+                tableHeaderRow.innerHTML = `
+                    <th class="py-4 px-2 md:px-8 text-center w-10 md:w-16">#</th>
+                    <th class="py-4 px-2 md:px-6">อำเภอ</th>
+                    <th class="py-4 px-2 md:px-6 text-center">PM2.5</th>
+                `;
+            }
 
-            data.forEach((item, i) => {
-                if (item.val > maxV) maxV = item.val;
+            document.getElementById('htmlInput').value = cache[mode].rawInput;
+            clearScreenUI();
 
-                let bgHex = "#0ea5e9"; 
-                if (item.val > 75) { bgHex = "#dc2626"; }
-                else if (item.val > 50) { bgHex = "#f97316"; }
-                else if (item.val > 37) { bgHex = "#facc15"; }
-                else if (item.val > 25) { bgHex = "#22c55e"; }
+            if (cache[mode].data && cache[mode].data.length > 0) {
+                if (mode === 'CCDC') renderCCDC(cache.CCDC.data);
+                else renderGISTDA(cache.GISTDA.data);
+            } else {
+                forceUpdate();
+            }
+        }
 
-                let textCol = (item.val > 37 && item.val <= 50) ? "text-slate-900" : "text-white";
+        function toggleManualInput() { document.getElementById('manualInputSection').classList.toggle('hidden'); }
+        
+        function clearInput() {
+            document.getElementById('htmlInput').value = '';
+            cache[currentMode].rawInput = ''; 
+            clearScreenUI();
+        }
 
-                if (i < 10) {
-                    top10Container.innerHTML += `
-                        <div style="background-color: ${bgHex};" class="aqi-card-web flex items-center ${textCol} px-4 md:px-6 py-3 md:py-4 rounded-2xl md:rounded-[24px] shadow-sm overflow-hidden box-border h-auto min-h-[80px] md:h-[100px] relative mb-3">
-                            <div class="w-10 md:w-16 flex-shrink-0 text-center mr-2 md:mr-4">
-                                <span class="text-4xl md:text-6xl font-black opacity-30 leading-none block">${i+1}</span>
-                            </div>
-                            <div class="flex-1 min-w-0 pr-2 md:pr-4 overflow-hidden flex flex-col justify-center">
-                                <div class="text-xl md:text-3xl font-black leading-snug mb-0.5 md:mb-0 truncate pb-1">อ.${item.name}</div>
-                                <div class="text-[10px] md:text-xs font-bold opacity-90 truncate leading-relaxed py-0.5">${formatLocation(item.location)}</div>
-                            </div>
-                            <div class="flex-shrink-0 text-right min-w-[70px] md:min-w-[90px]">
-                                <div class="flex flex-col items-end justify-center">
-                                    <div class="flex items-baseline justify-end">
-                                        <span class="text-[10px] md:text-sm font-bold mr-1 md:mr-2 opacity-80">PM2.5</span>
-                                        <span class="text-4xl md:text-6xl font-black leading-none">${item.val}</span>
-                                    </div>
-                                    <div class="text-[8px] md:text-[10px] font-bold opacity-80 mt-0.5 md:mt-1 tracking-widest">µg/m³</div>
-                                </div>
-                            </div>
-                        </div>`;
-                }
+        function clearScreenUI() {
+            document.getElementById('summarySection').classList.add('hidden');
+            document.getElementById('fullListSection').classList.add('hidden');
+            document.getElementById('missingAlert').classList.add('hidden');
+            document.getElementById('timeDisplay').classList.add('hidden');
+            document.getElementById('statusMessage').innerText = '';
+            document.getElementById('top10WebContainer').innerHTML = '';
+            document.getElementById('fullTableBody').innerHTML = '';
+        }
 
-                let badgeClass = item.val > 75 ? "bg-red-100 text-red-600" : item.val > 50 ? "bg-orange-100 text-orange-600" : item.val > 37 ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700";
+        function forceUpdate() {
+            if (currentMode === 'CCDC') fetchFromGAS();
+            else autoFetchDataGISTDA();
+        }
 
-                // แก้ไขตารางสำหรับมือถือ: ลบ line-clamp, เพิ่ม whitespace-normal และ break-words
-                tableBody.innerHTML += `
-                    <tr class="border-b hover:bg-slate-50 transition">
-                        <td class="py-3 px-3 md:px-6 text-center font-bold text-slate-400 text-xs md:text-base">${i+1}</td>
-                        <td class="py-3 px-2 md:px-6 font-bold text-slate-700 text-sm md:text-lg whitespace-nowrap">อ.${item.name}</td>
-                        <td class="py-3 px-2 md:px-6 text-[10px] md:text-[11px] text-slate-400 max-w-[140px] md:max-w-xs whitespace-normal break-words leading-snug">${cleanLocationName(item.location)}</td>
-                        <td class="py-3 px-1 md:px-6 text-center"><span class="${badgeClass} py-1 px-2 md:px-3 rounded-full font-black text-[10px] md:text-xs">${item.val}</span></td>
-                    </tr>`;
-            });
+        function processManualInput() {
+            const val = document.getElementById('htmlInput').value;
+            cache[currentMode].rawInput = val; 
+            if (currentMode === 'CCDC') analyzeDustHTML(val);
+            else analyzeDustJSON(val);
+        }
 
+        function saveTop10Image() {
+            if (currentMode === 'CCDC') saveImageCCDC();
+            else saveImageGISTDA();
+        }
+
+        function updateDashStats(data) {
             document.getElementById('dataStatusBadge').innerText = data.length === 25 ? "ข้อมูลครบถ้วน" : `ข้อมูลบางส่วน (${data.length}/25 อำเภอ)`;
             document.getElementById('miniFound').innerText = `พบ: ${data.length}`;
             document.getElementById('miniMissing').innerText = `ขาด: ${allDistricts.length - data.length}`;
@@ -466,41 +306,490 @@
             if (missing.length) {
                 missingAlert.classList.remove('hidden');
                 document.getElementById('missingNames').innerText = missing.join(', ');
-            } else {
-                missingAlert.classList.add('hidden');
+            } else { 
+                missingAlert.classList.add('hidden'); 
             }
         }
 
-        // --- SAVE IMAGE LOGIC (Export Engine Only) ---
-        function saveTop10Image() {
+        // ==========================================
+        // ฟังก์ชันแปลงเวลาเป็นรูปแบบเต็ม
+        // ==========================================
+        function getFullThaiDateString(rawDateStr) {
+            if(!rawDateStr) return "";
+            try {
+                let d = new Date(rawDateStr.replace(" ", "T"));
+                
+                // ถ้าระบบส่งมาเป็นภาษาไทยอยู่แล้ว (Date แปลงไม่ได้) ให้แกะข้อความหาวันที่แทน
+                if (isNaN(d.getTime())) {
+                    const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+                    const thaiMonthsShort = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+                    
+                    let day = 1, month = 0, year = new Date().getFullYear(), hrs = 0, mins = 0;
+                    let foundMonth = false;
+
+                    let yearMatch = rawDateStr.match(/25\d{2}/);
+                    if(yearMatch) year = parseInt(yearMatch[0]) - 543;
+                    else if(rawDateStr.match(/20\d{2}/)) year = parseInt(rawDateStr.match(/20\d{2}/)[0]);
+
+                    let nums = rawDateStr.match(/\d+/g);
+                    if (nums) {
+                         for(let n of nums) {
+                             if(parseInt(n) >= 1 && parseInt(n) <= 31) {
+                                 day = parseInt(n);
+                                 break;
+                             }
+                         }
+                    }
+
+                    let timeMatch = rawDateStr.match(/([0-2]?\d):([0-5]\d)/);
+                    if(timeMatch) {
+                        hrs = parseInt(timeMatch[1]);
+                        mins = parseInt(timeMatch[2]);
+                    }
+
+                    for (let i = 0; i < 12; i++) {
+                        if (rawDateStr.includes(thaiMonths[i]) || rawDateStr.includes(thaiMonthsShort[i])) {
+                            month = i;
+                            foundMonth = true;
+                            break;
+                        }
+                    }
+
+                    if (foundMonth) d = new Date(year, month, day, hrs, mins);
+                }
+
+                if (!isNaN(d.getTime())) {
+                    const days = ["วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"];
+                    const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+                    return `${days[d.getDay()]}ที่ ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543} เวลา ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} น.`;
+                }
+            } catch(e){}
+            return rawDateStr;
+        }
+
+        // ==========================================
+        // LOGIC: CCDC (From V.1 CCDC.html)
+        // ==========================================
+        async function fetchFromGAS() {
+            const statusEl = document.getElementById('statusMessage');
+            const spinner = document.getElementById('fetchSpinner');
+            const btn = document.getElementById('btnHeaderUpdate');
+            let proxyUrl = DEFAULT_GAS_URL;
+
+            btn.disabled = true; spinner.classList.remove('hidden');
+            statusEl.innerText = "กำลังดึงหน้าเว็บผ่าน GAS Scraper...";
+            statusEl.className = "text-center mt-4 text-xs font-bold text-blue-500";
+
+            try {
+                const response = await fetch(proxyUrl, { method: 'GET', redirect: 'follow' });
+                if (!response.ok) throw new Error("HTTP error " + response.status);
+                
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                if (data.html) {
+                    analyzeDustHTML(data.html);
+                    statusEl.innerText = "✅ อัปเดตข้อมูลสำเร็จ (Scraper Mode)";
+                    statusEl.className = "text-center mt-4 text-xs font-bold text-green-500";
+                    setTimeout(() => { if(statusEl.innerText.includes('สำเร็จ')) statusEl.innerText = ""; }, 3000);
+                }
+            } catch (err) {
+                statusEl.innerText = `❌ Error: ${err.message}`;
+                statusEl.className = "text-center mt-4 text-xs font-bold text-red-500";
+                document.getElementById('manualInputSection').classList.remove('hidden');
+            } finally {
+                btn.disabled = false; spinner.classList.add('hidden');
+            }
+        }
+
+        function analyzeDustHTML(rawHtml = null) {
+            const html = rawHtml || document.getElementById('htmlInput').value;
+            if (!html) return;
+            cache.CCDC.rawInput = html;
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            let updateTime = "";
+            doc.querySelectorAll('p').forEach(p => {
+                if (p.innerText.includes("อัพเดทข้อมูลเมื่อ")) {
+                    let rawTime = p.innerText.replace("อัพเดทข้อมูลเมื่อ :", "").trim();
+                    updateTime = getFullThaiDateString(rawTime);
+                }
+            });
+            if (updateTime) cache.CCDC.updateTime = updateTime;
+
+            const districtMap = {};
+            doc.querySelectorAll('tr').forEach(row => {
+                const nameEl = row.querySelector('.db_namez');
+                const valEl = row.querySelector('.c_value');
+                if (nameEl && valEl) {
+                    const fullName = nameEl.innerText.trim();
+                    const value = Math.round(parseFloat(valEl.innerText.trim()));
+                    const amphoeMatch = fullName.match(/(?:อ\.|อำเภอ)\s*([ก-๙]+)/);
+                    if (amphoeMatch) {
+                        let aName = amphoeMatch[1].trim();
+                        if (aName === "เมือง") aName = "เมืองเชียงใหม่";
+                        if (!districtMap[aName] || value > districtMap[aName].val) {
+                            districtMap[aName] = { val: value, loc: fullName };
+                        }
+                    }
+                }
+            });
+
+            const resultData = Object.keys(districtMap).map(k => ({ name: k, val: districtMap[k].val, location: districtMap[k].loc }));
+            resultData.sort((a, b) => b.val - a.val);
+            cache.CCDC.data = resultData;
+            
+            if (currentMode === 'CCDC') renderCCDC(resultData);
+        }
+
+        function renderCCDC(data) {
+            document.getElementById('timeValue').innerText = cache.CCDC.updateTime;
+            if(cache.CCDC.updateTime) document.getElementById('timeDisplay').classList.remove('hidden');
+
+            const top10Container = document.getElementById('top10WebContainer');
+            const tableBody = document.getElementById('fullTableBody');
+            top10Container.innerHTML = ''; tableBody.innerHTML = '';
+            
+            data.forEach((item, i) => {
+                let bgHex = "#0ea5e9";
+                let webTextClass = "text-white"; 
+                
+                if (item.val > 75) { bgHex = "#dc2626"; }
+                else if (item.val > 37.5) { bgHex = "#f97316"; }
+                else if (item.val > 25) { bgHex = "#facc15"; webTextClass = "text-slate-900"; } 
+                else if (item.val > 15) { bgHex = "#22c55e"; }
+
+                if (i < 10) {
+                    top10Container.innerHTML += `
+                        <div style="background-color: ${bgHex};" class="aqi-card-web flex items-center ${webTextClass} px-6 py-4 rounded-[24px] shadow-sm h-[100px] relative mb-3">
+                            <div class="w-16 flex-shrink-0 text-center mr-4">
+                                <span class="text-6xl font-black opacity-30 leading-none">${i+1}</span>
+                            </div>
+                            <div class="flex-1 min-w-0 pr-4">
+                                <div class="text-3xl font-black leading-tight truncate">อ.${item.name}</div>
+                                <div class="text-xs font-bold opacity-90 truncate py-0.5 leading-relaxed">จุดตรวจวัด : ${item.location.replace(/\s*(?:อ\.|อำเภอ|จ\.|จังหวัด)\s*[ก-๙]+/g, '').trim()}</div>
+                            </div>
+                            <div class="flex-shrink-0 text-right min-w-[90px]">
+                                <div class="flex flex-col items-end">
+                                    <div class="flex items-baseline">
+                                        <span class="text-sm font-bold mr-2 opacity-80">PM2.5</span>
+                                        <span class="text-6xl font-black leading-none">${item.val}</span>
+                                    </div>
+                                    <div class="text-[10px] font-bold opacity-80 mt-1 tracking-widest">µg/m³</div>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+                
+                let badge = "bg-blue-100 text-blue-700";
+                if (item.val > 75) badge = "bg-red-100 text-red-600";
+                else if (item.val > 37.5) badge = "bg-orange-100 text-orange-600";
+                else if (item.val > 25) badge = "bg-yellow-100 text-yellow-700";
+                else if (item.val > 15) badge = "bg-green-100 text-green-700";
+                
+                tableBody.innerHTML += `<tr class="border-b hover:bg-slate-50 transition"><td class="py-4 px-8 text-center font-bold text-slate-400">${i+1}</td><td class="py-4 px-6 font-bold text-slate-700">อ.${item.name}</td><td class="py-4 px-6 text-[11px] text-slate-400">${item.location}</td><td class="py-4 px-6 text-center"><span class="${badge} py-1 px-3 rounded-full font-black text-xs">${item.val}</span></td></tr>`;
+            });
+
+            updateDashStats(data);
+        }
+
+        function saveImageCCDC() {
+            const data = cache.CCDC.data;
+            if(!data) return;
             const exportContainer = document.getElementById('hiddenExportContainer');
-            exportContainer.innerHTML = ''; 
+            exportContainer.innerHTML = ''; let rowsHtml = '';
             
-            let rowsHtml = '';
-            const top10 = currentResultData.slice(0, 10);
-            
-            top10.forEach((item, i) => {
-                let bgHex = "#0ea5e9"; 
-                let textCol = "white";
+            data.slice(0, 10).forEach((item, i) => {
+                let bgHex = "#0ea5e9", textCol = "white";
                 
                 if (item.val > 75) { bgHex = "#dc2626"; } 
-                else if (item.val > 50) { bgHex = "#f97316"; } 
-                else if (item.val > 37) { bgHex = "#facc15"; textCol = "#1e293b"; } 
-                else if (item.val > 25) { bgHex = "#22c55e"; }
-
+                else if (item.val > 37.5) { bgHex = "#f97316"; } 
+                else if (item.val > 25) { bgHex = "#facc15"; textCol = "#1e293b"; } 
+                else if (item.val > 15) { bgHex = "#22c55e"; }
+                
+                // Specific inline styles for CCDC (48px district font, 150px val width)
                 rowsHtml += `
                     <table class="export-table-row" style="background-color: ${bgHex}; color: ${textCol};">
                         <tr>
                             <td class="exp-col-rank">${i+1}</td>
                             <td class="exp-col-info">
-                                <span class="exp-district">อ.${item.name}</span>
-                                <span class="exp-location" style="color: ${textCol};">${formatLocation(item.location)}</span>
+                                <span class="exp-district" style="font-size: 48px; margin-top: -30px;">อ.${item.name}</span>
+                                <span class="exp-location" style="font-size: 22px; color: ${textCol}; opacity: 0.8;">จุดตรวจวัด : ${item.location.replace(/\s*(?:อ\.|อำเภอ|จ\.|จังหวัด)\s*[ก-๙]+/g, '').trim()}</span>
                             </td>
                             <td class="exp-col-value">
                                 <div class="exp-value-group">
                                     <div class="exp-val-row">
                                         <span class="exp-pm-label">PM2.5</span>
-                                        <span class="exp-val-num">${item.val}</span>
+                                        <span class="exp-val-num" style="width: 150px;">${item.val}</span>
+                                    </div>
+                                    <div class="exp-unit">µg/m³</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>`;
+            });
+            exportContainer.innerHTML = `<div style="padding: 40px; width: 1080px; box-sizing: border-box;">${rowsHtml}</div>`;
+            html2canvas(exportContainer, { backgroundColor: null, scale: 2, logging: false, useCORS: true }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `PM25_ChiangMai_CCDC_Top10_${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png'); link.click();
+            });
+        }
+
+        // ==========================================
+        // LOGIC: GISTDA (From V.2 GISTDA.html)
+        // ==========================================
+        async function autoFetchDataGISTDA() {
+            const statusEl = document.getElementById('statusMessage');
+            const spinner = document.getElementById('fetchSpinner');
+            const btn = document.getElementById('btnHeaderUpdate');
+
+            btn.disabled = true; btn.classList.add('opacity-75');
+            spinner.classList.remove('hidden');
+            statusEl.innerText = "กำลังเชื่อมต่อกับเซิร์ฟเวอร์ GISTDA...";
+            statusEl.className = "text-center mt-4 text-xs font-bold text-blue-500";
+
+            const bulkEndpoints = [
+                `https://pm25.gistda.or.th/rest/getPM25byAmphoe24hrs?prov_idn=50`,
+                `https://pm25.gistda.or.th/rest/getPM25byAmphoe?prov_idn=50`,
+                `https://pm25.gistda.or.th/rest/getPm25byAmphoe?prov_idn=50`
+            ];
+
+            const proxyList = [
+                { url: (ep) => `https://api.allorigins.win/get?url=${encodeURIComponent(ep)}`, type: 'json_wrapper' },
+                { url: (ep) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(ep)}`, type: 'raw' },
+                { url: (ep) => ep, type: 'raw' }
+            ];
+
+            let rawJsonText = null;
+
+            try {
+                for (let ep of bulkEndpoints) {
+                    if(rawJsonText) break;
+                    for (let i = 0; i < proxyList.length; i++) {
+                        try {
+                            const proxy = proxyList[i];
+                            statusEl.innerText = `กำลังดึงข้อมูลแบบรวม (ช่องทางที่ ${i + 1}/${proxyList.length})...`;
+                            
+                            const res = await fetch(proxy.url(ep), { cache: 'no-store' });
+                            if (res.ok) {
+                                let text = await res.text();
+                                if (proxy.type === 'json_wrapper') {
+                                    try { text = JSON.parse(text).contents || ""; } catch(e) { text = ""; }
+                                }
+                                if (text && text.length > 50 && !text.includes('errMsg')) {
+                                    rawJsonText = text; break; 
+                                }
+                            }
+                        } catch (e) { }
+                    }
+                }
+
+                if (!rawJsonText) {
+                    statusEl.innerText = "เซิร์ฟเวอร์บังคับใช้รหัสอำเภอ กำลังดึงข้อมูลทีละอำเภอ (25 รอบ)...";
+                    let combinedData = [];
+                    
+                    for (let i = 0; i < cmAmphoeCodes.length; i += 5) {
+                        const batch = cmAmphoeCodes.slice(i, i + 5);
+                        statusEl.innerText = `กำลังรวบรวมข้อมูลทีละอำเภอ (${i + batch.length}/25)...`;
+                        
+                        const promises = batch.map(async (code) => {
+                            const ep = `https://pm25.gistda.or.th/rest/getPM25byAmphoe24hrs?ap_idn=${code}`;
+                            let resData = null;
+                            
+                            try {
+                                const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(ep)}`);
+                                if (res.ok) resData = await res.json();
+                            } catch (e) {
+                                try {
+                                    const res2 = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(ep)}`);
+                                    if (res2.ok) {
+                                        const data = await res2.json();
+                                        resData = JSON.parse(data.contents);
+                                    }
+                                } catch (e2) {}
+                            }
+                            
+                            if (resData && !resData.errMsg) {
+                                const dIndex = cmAmphoeCodes.indexOf(code);
+                                if(dIndex !== -1) resData.injectedDistrictName = allDistricts[dIndex];
+                                return resData;
+                            }
+                            return null;
+                        });
+
+                        const results = await Promise.all(promises);
+                        results.forEach(res => { if (res) combinedData.push(res); });
+                    }
+
+                    if (combinedData.length > 0) rawJsonText = JSON.stringify(combinedData);
+                }
+
+                if (!rawJsonText) throw new Error("Fetch failed on all sources");
+
+                document.getElementById('htmlInput').value = rawJsonText;
+                analyzeDustJSON(rawJsonText);
+                statusEl.innerText = "";
+            } catch (error) {
+                statusEl.innerText = "❌ ดึงข้อมูลอัตโนมัติไม่สำเร็จ เซิร์ฟเวอร์ GISTDA อาจล่ม กรุณาวาง JSON เอง";
+                statusEl.className = "text-center mt-4 text-xs font-bold text-red-500";
+                document.getElementById('manualInputSection').classList.remove('hidden');
+            } finally {
+                btn.disabled = false; btn.classList.remove('opacity-75'); spinner.classList.add('hidden');
+            }
+        }
+
+        function analyzeDustJSON(rawText = null) {
+            const textToProcess = rawText || document.getElementById('htmlInput').value.trim();
+            if (!textToProcess) return;
+            cache.GISTDA.rawInput = textToProcess;
+
+            let data;
+            try { data = JSON.parse(textToProcess); } 
+            catch (e) { alert("รูปแบบข้อมูลไม่ถูกต้อง: กรุณาใส่โค้ดในรูปแบบ JSON"); return; }
+
+            let list = [];
+            if (Array.isArray(data)) list = data;
+            else if (data.data && Array.isArray(data.data)) list = data.data;
+            else if (data.features && Array.isArray(data.features)) list = data.features;
+            else if (typeof data === 'object') list = [data];
+
+            let updateTime = "";
+            const districtMap = {};
+
+            list.forEach((item, index) => {
+                const props = item.properties || item;
+                if (!props || typeof props !== 'object') return;
+
+                let pmValue = 0;
+                let aName = props.injectedDistrictName || props.ap_name_th || props.amp_th || props.amphoe_name_th || props.amphoe || props.ap_name || props.name_th || props.amphoe_th || "";
+                
+                // ดึงข้อมูลเวลาที่ซ่อนอยู่ใน JSON ให้ครอบคลุมทุกแบบของ API
+                let rawTimeStr = props.datetime || props.date_time || props.update_time || props.updated_at || props.time_stamp || (props.date ? props.date + " " + (props.time || "00:00:00") : props.time);
+
+                if (props.graphHistory24hrs && Array.isArray(props.graphHistory24hrs)) {
+                    const history = props.graphHistory24hrs;
+                    if (history.length > 0) pmValue = parseFloat(history[history.length - 1][0]); 
+                    if (!updateTime && rawTimeStr) updateTime = getFullThaiDateString(rawTimeStr);
+                    else if (!updateTime && props.datetimeThai) updateTime = props.datetimeThai.dateThai + " " + props.datetimeThai.timeThai;
+                    if (!aName && list.length === 25) aName = allDistricts[index];
+                } else {
+                    const valuesString = Object.values(props).join(" ");
+                    const isChiangMai = valuesString.includes("เชียงใหม่") || valuesString.includes("Chiang Mai") || props.prov_idn == "50" || props.prov_code == "50" || props.province_id == "50" || list.length <= 30;
+
+                    if (!isChiangMai && !props.injectedDistrictName) return;
+
+                    const pmValueStr = props.pm25 || props.pm25_avg || props.pm25_value || props.PM25 || props.pm2_5 || 0;
+                    pmValue = parseFloat(pmValueStr);
+                    
+                    if (!updateTime && rawTimeStr) {
+                        updateTime = getFullThaiDateString(rawTimeStr);
+                    }
+                }
+
+                if (aName) {
+                    aName = aName.replace(/อ\.|อำเภอ/g, '').trim();
+                    if (aName === "เมือง") aName = "เมืองเชียงใหม่";
+
+                    if (pmValue > 0) {
+                        if (!districtMap[aName] || pmValue > districtMap[aName].val) {
+                            districtMap[aName] = { val: pmValue }; 
+                        }
+                    }
+                }
+            });
+
+            if (updateTime) cache.GISTDA.updateTime = updateTime;
+
+            const resultData = Object.keys(districtMap).map(k => ({ name: k, val: districtMap[k].val }));
+            resultData.sort((a, b) => b.val - a.val);
+            cache.GISTDA.data = resultData;
+
+            if (currentMode === 'GISTDA') renderGISTDA(resultData);
+        }
+
+        function renderGISTDA(data) {
+            document.getElementById('timeValue').innerText = cache.GISTDA.updateTime;
+            if(cache.GISTDA.updateTime) document.getElementById('timeDisplay').classList.remove('hidden');
+
+            const top10Container = document.getElementById('top10WebContainer'); 
+            const tableBody = document.getElementById('fullTableBody');
+            
+            top10Container.innerHTML = ''; tableBody.innerHTML = '';
+
+            data.forEach((item, i) => {
+                let bgHex = "#0ea5e9"; 
+                if (item.val >= 75.1) { bgHex = "#dc2626"; }
+                else if (item.val >= 37.6) { bgHex = "#f97316"; }
+                else if (item.val >= 25.1) { bgHex = "#facc15"; }
+                else if (item.val >= 15.1) { bgHex = "#22c55e"; }
+
+                let textCol = (item.val >= 25.1 && item.val <= 37.5) ? "text-slate-900" : "text-white";
+
+                if (i < 10) {
+                    top10Container.innerHTML += `
+                        <div style="background-color: ${bgHex};" class="aqi-card-web flex items-center ${textCol} px-4 md:px-6 py-3 md:py-4 rounded-2xl md:rounded-[24px] shadow-sm overflow-hidden box-border h-auto min-h-[80px] md:h-[100px] relative mb-3">
+                            <div class="w-10 md:w-16 flex-shrink-0 text-center mr-2 md:mr-4">
+                                <span class="text-4xl md:text-6xl font-black opacity-30 leading-none block">${i+1}</span>
+                            </div>
+                            <div class="flex-1 min-w-0 pr-2 md:pr-4 overflow-hidden flex flex-col justify-center">
+                                <div class="text-2xl md:text-4xl font-black leading-snug truncate">อ.${item.name}</div>
+                            </div>
+                            <div class="flex-shrink-0 text-right min-w-[70px] md:min-w-[90px]">
+                                <div class="flex flex-col items-end justify-center">
+                                    <div class="flex items-baseline justify-end">
+                                        <span class="text-[10px] md:text-sm font-bold mr-1 md:mr-2 opacity-80">PM2.5</span>
+                                        <span class="text-4xl md:text-6xl font-black leading-none">${item.val.toFixed(1)}</span>
+                                    </div>
+                                    <div class="text-[8px] md:text-[10px] font-bold opacity-80 mt-0.5 md:mt-1 tracking-widest">µg/m³</div>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+
+                let badgeClass = item.val >= 75.1 ? "bg-red-100 text-red-600" : item.val >= 37.6 ? "bg-orange-100 text-orange-600" : item.val >= 25.1 ? "bg-yellow-100 text-yellow-700" : item.val >= 15.1 ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-600";
+
+                tableBody.innerHTML += `
+                    <tr class="border-b hover:bg-slate-50 transition">
+                        <td class="py-3 px-3 md:px-6 text-center font-bold text-slate-400 text-xs md:text-base">${i+1}</td>
+                        <td class="py-3 px-2 md:px-6 font-bold text-slate-700 text-base md:text-xl whitespace-nowrap">อ.${item.name}</td>
+                        <td class="py-3 px-1 md:px-6 text-center"><span class="${badgeClass} py-1 px-2 md:px-3 rounded-full font-black text-[10px] md:text-xs">${item.val.toFixed(1)}</span></td>
+                    </tr>`;
+            });
+
+            updateDashStats(data);
+        }
+
+        function saveImageGISTDA() {
+            const data = cache.GISTDA.data;
+            if(!data) return;
+            const exportContainer = document.getElementById('hiddenExportContainer');
+            exportContainer.innerHTML = ''; 
+            
+            let rowsHtml = '';
+            
+            data.slice(0, 10).forEach((item, i) => {
+                let bgHex = "#0ea5e9"; let textCol = "white";
+                
+                if (item.val >= 75.1) { bgHex = "#dc2626"; } 
+                else if (item.val >= 37.6) { bgHex = "#f97316"; } 
+                else if (item.val >= 25.1) { bgHex = "#facc15"; textCol = "#1e293b"; } 
+                else if (item.val >= 15.1) { bgHex = "#22c55e"; }
+
+                // Specific inline styles for GISTDA (68px district font, margin -65px, 180px val width)
+                rowsHtml += `
+                    <table class="export-table-row" style="background-color: ${bgHex}; color: ${textCol};">
+                        <tr>
+                            <td class="exp-col-rank">${i+1}</td>
+                            <td class="exp-col-info">
+                                <span class="exp-district" style="font-size: 68px; margin-top: -65px;">อ.${item.name}</span>
+                            </td>
+                            <td class="exp-col-value">
+                                <div class="exp-value-group">
+                                    <div class="exp-val-row">
+                                        <span class="exp-pm-label">PM2.5</span>
+                                        <span class="exp-val-num" style="width: 180px;">${item.val.toFixed(1)}</span>
                                     </div>
                                     <div class="exp-unit">µg/m³</div>
                                 </div>
@@ -509,31 +798,13 @@
                     </table>`;
             });
 
-            exportContainer.innerHTML = `
-                <div style="padding: 40px; width: 1080px; box-sizing: border-box;">
-                    ${rowsHtml}
-                </div>
-            `;
+            exportContainer.innerHTML = `<div style="padding: 40px; width: 1080px; box-sizing: border-box;">${rowsHtml}</div>`;
 
-            html2canvas(exportContainer, {
-                backgroundColor: null,
-                scale: 2, 
-                logging: false,
-                useCORS: true
-            }).then(canvas => {
+            html2canvas(exportContainer, { backgroundColor: null, scale: 2, logging: false, useCORS: true }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `PM25_ChiangMai_Top10_${Date.now()}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
+                link.download = `PM25_ChiangMai_GISTDA_Top10_${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png'); link.click();
             });
-        }
-
-        function clearInput() {
-            document.getElementById('htmlInput').value = '';
-            document.getElementById('summarySection').classList.add('hidden');
-            document.getElementById('fullListSection').classList.add('hidden');
-            document.getElementById('missingAlert').classList.add('hidden');
-            document.getElementById('fetchStatus').innerText = '';
         }
     </script>
 </body>
