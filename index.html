@@ -729,12 +729,12 @@
 
             data.forEach((item, i) => {
                 let bgHex = "#0ea5e9"; 
-                if (item.val >= 75.1) { bgHex = "#dc2626"; }
-                else if (item.val >= 37.6) { bgHex = "#f97316"; }
-                else if (item.val >= 25.1) { bgHex = "#facc15"; }
-                else if (item.val >= 15.1) { bgHex = "#22c55e"; }
+                if (item.val > 75) { bgHex = "#dc2626"; }
+                else if (item.val > 37.5) { bgHex = "#f97316"; }
+                else if (item.val > 25) { bgHex = "#facc15"; }
+                else if (item.val > 15) { bgHex = "#22c55e"; }
 
-                let textCol = (item.val >= 25.1 && item.val <= 37.5) ? "text-slate-900" : "text-white";
+                let textCol = (item.val > 25 && item.val <= 37.5) ? "text-slate-900" : "text-white";
 
                 if (i < 10) {
                     top10Container.innerHTML += `
@@ -757,7 +757,7 @@
                         </div>`;
                 }
 
-                let badgeClass = item.val >= 75.1 ? "bg-red-100 text-red-600" : item.val >= 37.6 ? "bg-orange-100 text-orange-600" : item.val >= 25.1 ? "bg-yellow-100 text-yellow-700" : item.val >= 15.1 ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-600";
+                let badgeClass = item.val > 75 ? "bg-red-100 text-red-600" : item.val > 37.5 ? "bg-orange-100 text-orange-600" : item.val > 25 ? "bg-yellow-100 text-yellow-700" : item.val > 15 ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-600";
 
                 tableBody.innerHTML += `
                     <tr class="border-b hover:bg-slate-50 transition">
@@ -781,10 +781,10 @@
             data.slice(0, 10).forEach((item, i) => {
                 let bgHex = "#0ea5e9"; let textCol = "white";
                 
-                if (item.val >= 75.1) { bgHex = "#dc2626"; } 
-                else if (item.val >= 37.6) { bgHex = "#f97316"; } 
-                else if (item.val >= 25.1) { bgHex = "#facc15"; textCol = "#1e293b"; } 
-                else if (item.val >= 15.1) { bgHex = "#22c55e"; }
+                if (item.val > 75) { bgHex = "#dc2626"; } 
+                else if (item.val > 37.5) { bgHex = "#f97316"; } 
+                else if (item.val > 25) { bgHex = "#facc15"; textCol = "#1e293b"; } 
+                else if (item.val > 15) { bgHex = "#22c55e"; }
 
                 // Specific inline styles for GISTDA (68px district font, margin -65px, 180px val width)
                 rowsHtml += `
