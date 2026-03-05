@@ -1106,7 +1106,7 @@
                                     const txtUnit = clonedBlock.querySelector('.unit-text');
                                     const txtFallback = clonedBlock.querySelector('.ranking-fallback-text');
                                     if (mainContent) mainContent.style.transform = `translateY(-${w * 0.05}px)`;
-                                    if (txtRank) txtRank.style.fontSize = (w * 0.095) + 'px';
+                                    if (txtRank) { txtRank.style.fontSize = (w * 0.13) + 'px'; }
                                     if (txtName) { txtName.style.fontSize = (w * 0.16) + 'px'; txtName.style.transform = `translateY(-${w * 0.03}px)`; }
                                     if (txtPm25) { txtPm25.style.fontSize = (w * 0.42) + 'px'; txtPm25.style.transform = `translateY(-${w * 0.15}px)`; }
                                     if (txtUnit) { txtUnit.style.fontSize = (w * 0.10) + 'px'; txtUnit.style.transform = `translateY(-${w * 0.06}px)`; }
@@ -1187,14 +1187,14 @@
                 const dParts = apiDateTime.date.split('-');
                 let fmtDate = apiDateTime.date;
                 if (dParts.length === 3) fmtDate = `${parseInt(dParts[2])} ${THAI_MONTHS_SHORT[parseInt(dParts[1]) - 1]} ${(parseInt(dParts[0]) + 543).toString().slice(-2)}`;
-                let text = `สถานการณ์คุณภาพอากาศ พื้นที่ “ภาคเหนือ” (${enabledProvinces.size} จังหวัด) วันที่ ${fmtDate} เวลา ${apiDateTime.time} น.\n.\n`;
+                let text = `สถานการณ์${reportMode === 'PM25' ? 'ฝุ่น PM2.5' : 'คุณภาพอากาศ'} พื้นที่ “ภาคเหนือ” (${enabledProvinces.size} จังหวัด) วันที่ ${fmtDate} เวลา ${apiDateTime.time} น.\n.\n`;
                 rankedProvinces.forEach((item, index) => {
                     const val = reportMode === 'PM25' ? item.data.pm25 : item.data.aqi;
                     const otherVal = reportMode === 'PM25' ? item.data.aqi : item.data.pm25;
-                    if (reportMode === 'PM25') { text += `อันดับ ${index + 1} จ.${item.name} | PM2.5 : ${val} ug/m³ | AQI : ${otherVal}\n`; } 
-                    else { text += `อันดับ ${index + 1} จ.${item.name} | AQI : ${val} | PM2.5 : ${otherVal} ug/m³\n`; }
+                    if (reportMode === 'PM25') { text += `อันดับ ${index + 1} จ.${item.name} | PM2.5 : ${val} µg/m³\n`; } 
+                    else { text += `อันดับ ${index + 1} จ.${item.name} | AQI : ${val} | PM2.5 : ${otherVal} µg/m³\n`; }
                 });
-                text += `.\nข้อมูลอ้างอิง : Air4Thai กรมควบคุมมลพิษ\n*วัดค่าฝุ่นจาก อ.เมือง ของแต่ละจังหวัดที่เลือก`;
+                text += `.\nข้อมูลอ้างอิง : Air4Thai กรมควบคุมมลพิษ\n*วัดค่าฝุ่นจาก อ.เมือง ของแต่ละจังหวัด / จ.ตาก อ.แม่สอด`;
                 return text;
             };
 
@@ -1400,7 +1400,7 @@
                                         return (
                                             <div key={item.name} className={`ranking-block relative flex flex-col items-center justify-center px-2 rounded-2xl shadow-sm border-2 ${rankingCols >= 6 ? 'aspect-square' : 'py-6 h-full'} ${colors.bg} ${colors.text} ${colors.border}`} style={{ containerType: 'inline-size' }}>
                                                 <div className="flex flex-col items-center ranking-main-content transition-transform w-full">
-                                                    <div className="flex items-center opacity-95" style={{ marginBottom: '3%' }}><span className="font-semibold rank-text leading-none" style={{ fontSize: '8cqi', ...textShadowStyle }}>อันดับ {index + 1}</span></div>
+                                                    <div className="flex items-center opacity-95" style={{ marginBottom: '3%' }}><span className="font-semibold rank-text leading-none" style={{ fontSize: '8cqi', ...textShadowStyle }}>#{index + 1}</span></div>
                                                     <span className="font-bold tracking-wide leading-tight name-text" style={{ fontSize: '16cqi', ...textShadowStyle }}>{item.name}</span>
                                                     <span className="font-black leading-none pm25-text" style={{ fontSize: '42cqi', marginTop: '2%', marginBottom: '2%', ...textShadowStyle }}>{val}</span>
                                                     <span className="font-semibold opacity-90 unit-text leading-none" style={{ fontSize: '10cqi', ...textShadowStyle }}>
