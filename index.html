@@ -567,7 +567,13 @@
                 const nameEl = row.querySelector('.db_namez');
                 const valEl = row.querySelector('.c_value');
                 if (nameEl && valEl) {
-                    const fullName = nameEl.innerText.trim();
+                    let fullName = nameEl.innerText.trim();
+                    
+                    // เพิ่มเงื่อนไขดักจับแก้ไขชื่อให้ รร.บ้านปางเฟือง
+                    if (fullName.includes("รร.บ้านปางเฟือง")) {
+                        fullName = "รร.บ้านปางเฟือง อ.เชียงดาว จ.เชียงใหม่";
+                    }
+                    
                     const value = Math.round(parseFloat(valEl.innerText.trim()));
                     const amphoeMatch = fullName.match(/(?:อ\.|อำเภอ)\s*([ก-๙]+)/);
                     if (amphoeMatch) {
