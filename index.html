@@ -1065,8 +1065,13 @@
                     });
                     setData(northernStations);
                     if (northernStations.length > 0 && northernStations[0].AQILast) {
-                        setLastUpdated(`${northernStations[0].AQILast.date} เวลา ${northernStations[0].AQILast.time} น.`);
-                        setApiDateTime({ date: northernStations[0].AQILast.date, time: northernStations[0].AQILast.time });
+                        const rawDate = northernStations[0].AQILast.date;
+                        const rawTime = northernStations[0].AQILast.time;
+                        const fullDateTime = `${rawDate} ${rawTime}`;
+                        
+                        // ใช้ฟังก์ชัน getFullThaiDateString จากโค้ดหลักเพื่อแปลงเป็นวันที่แบบเต็ม
+                        setLastUpdated(getFullThaiDateString(fullDateTime));
+                        setApiDateTime({ date: rawDate, time: rawTime });
                     }
                 } catch (err) { setError('เกิดข้อผิดพลาดในการเชื่อมต่อข้อมูล Air4Thai'); } finally { setLoading(false); }
             };
@@ -1197,8 +1202,15 @@
                 rankedProvinces.forEach((item, index) => {
                     const val = reportMode === 'PM25' ? item.data.pm25 : item.data.aqi;
                     const otherVal = reportMode === 'PM25' ? item.data.aqi : item.data.pm25;
-                    if (reportMode === 'PM25') { text += `อันดับ ${index + 1} จ.${item.name} | PM2.5 : ${val} µg/m³\n`; } 
-                    else { text += `อันดับ ${index + 1} จ.${item.name} | AQI : ${val} | PM2.5 : ${otherVal} µg/m³\n`; }
+                    
+                    const tambonStr = item.data.areaTH ? item.data.areaTH.split(' ').find(p => p.startsWith('ต.')) || '' : '';
+                    let locStr = item.data.nameTH || '';
+                    if (tambonStr && !locStr.includes(tambonStr)) {
+                        locStr += ' ' + tambonStr;
+                    }
+
+                    if (reportMode === 'PM25') { text += `- อันดับ ${index + 1} จ.${item.name} | PM2.5 : ${val} µg/m³\nจุดตรวจวัด : ${locStr}\n`; } 
+                    else { text += `- อันดับ ${index + 1} จ.${item.name} | AQI : ${val} | PM2.5 : ${otherVal} µg/m³\nจุดตรวจวัด : ${locStr}\n`; }
                 });
                 text += `.\nข้อมูลอ้างอิง : Air4Thai กรมควบคุมมลพิษ\n*วัดค่าฝุ่นจาก อ.เมือง ของแต่ละจังหวัด / จ.ตาก อ.แม่สอด`;
                 return text;
