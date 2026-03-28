@@ -83,7 +83,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* บังคับ Export Air4Thai ให้เป็น Prompt */
+        /* บังคับ Export Air4Thai และ CCDC Grid ให้เป็น Prompt */
         .export-prompt-font, .export-prompt-font * {
             font-family: 'Prompt', sans-serif !important;
         }
@@ -96,9 +96,10 @@
         <!-- ตัวสลับระบบ (Toggle Switch) -->
         <div class="flex justify-center mb-4">
             <div class="bg-white p-1.5 rounded-2xl flex flex-wrap justify-center gap-1 shadow-sm border border-slate-200">
-                <button id="btnModeCCDC" onclick="switchMode('CCDC')" class="toggle-btn toggle-active-ccdc px-6 py-2 rounded-xl font-bold text-sm">จุดตรวจวัด (CCDC)</button>
-                <button id="btnModeGISTDA" onclick="switchMode('GISTDA')" class="toggle-btn text-slate-500 hover:text-slate-700 px-6 py-2 rounded-xl font-bold text-sm bg-transparent">ดาวเทียม (GISTDA)</button>
-                <button id="btnModeAIR4THAI" onclick="switchMode('AIR4THAI')" class="toggle-btn text-slate-500 hover:text-slate-700 px-6 py-2 rounded-xl font-bold text-sm bg-transparent">กรมควบคุมมลพิษ (Air4Thai)</button>
+                <button id="btnModeCCDC" onclick="switchMode('CCDC')" class="toggle-btn toggle-active-ccdc px-4 py-2 rounded-xl font-bold text-sm">จุดตรวจวัด (Top 10)</button>
+                <button id="btnModeCCDC25" onclick="switchMode('CCDC_25')" class="toggle-btn text-slate-500 hover:text-slate-700 px-4 py-2 rounded-xl font-bold text-sm bg-transparent">จุดตรวจวัด (25 อำเภอ)</button>
+                <button id="btnModeGISTDA" onclick="switchMode('GISTDA')" class="toggle-btn text-slate-500 hover:text-slate-700 px-4 py-2 rounded-xl font-bold text-sm bg-transparent">ดาวเทียม (GISTDA)</button>
+                <button id="btnModeAIR4THAI" onclick="switchMode('AIR4THAI')" class="toggle-btn text-slate-500 hover:text-slate-700 px-4 py-2 rounded-xl font-bold text-sm bg-transparent">กรมควบคุมมลพิษ (Air4Thai)</button>
             </div>
         </div>
         
@@ -126,7 +127,7 @@
                 </div>
             </div>
 
-            <!-- Dashboard Section: TOP 10 -->
+            <!-- Dashboard Section: TOP 10 (CCDC/GISTDA) -->
             <div id="summarySection" class="hidden space-y-4">
                 <div class="flex flex-wrap items-center justify-between px-2 mb-2 gap-2">
                     <div class="flex items-center gap-3">
@@ -143,20 +144,51 @@
                 <div id="top10WebContainer" class="flex flex-col gap-1.5 md:gap-3">
                     <!-- Data injected here -->
                 </div>
-                
-                <!-- START: Copy Report CCDC/GISTDA -->
-                <div id="legacyCopySection" class="bg-white rounded-[24px] shadow-sm border border-slate-200 p-5 md:p-6 mt-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-black text-slate-800 text-sm">คัดลอกรายงาน PM2.5</h3>
-                        <button onclick="copyLegacyReportText()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-4 py-2 rounded-xl text-xs font-bold transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            <span id="copyLegacyStatus">คัดลอกข้อความ</span>
-                        </button>
-                    </div>
-                    <div id="legacyReportText" class="bg-slate-50 rounded-xl p-4 border border-slate-100 text-xs font-bold text-slate-600 leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap"></div>
-                </div>
-                <!-- END: Copy Report -->
             </div>
+
+            <!-- Dashboard Section: GRID 25 (CCDC_25) -->
+            <div id="grid25Section" class="hidden flex flex-col mt-4">
+                <div class="w-full flex flex-col">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 mb-4 px-2">
+                        <h2 class="text-xl md:text-2xl font-black text-slate-800">จัดอันดับ 25 อำเภอฝุ่นสูงสุด</h2>
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm">
+                                <label class="text-xs font-bold text-slate-600">แถวละ:</label>
+                                <select id="ccdcGridCols" onchange="if(cache.CCDC_25.data) renderCCDC25(cache.CCDC_25.data)" class="bg-slate-50 border border-slate-200 rounded-lg text-xs px-2 py-1 font-bold cursor-pointer outline-none">
+                                    <option value="4">4</option>
+                                    <option value="5" selected>5</option>
+                                    <option value="6">6</option>
+                                </select>
+                            </div>
+                            <button onclick="saveImageCCDC25()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-colors flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                                บันทึกรูป (Grid)
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-[24px] shadow-sm border border-slate-200 relative pt-4 pb-6 px-4">
+                        <div id="ccdc-ranking-export-container" class="export-prompt-font w-full" style="background-color: transparent;">
+                            <div id="ccdc-grid-container" style="display: grid; gap: 12px; width: 100%;">
+                                <!-- Grid จะถูกสร้างที่นี่ -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- START: Copy Report (Used by all Legacy modes) -->
+            <div id="legacyCopySection" class="hidden bg-white rounded-[24px] shadow-sm border border-slate-200 p-5 md:p-6 mt-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="copyTitle" class="font-black text-slate-800 text-sm">คัดลอกรายงาน PM2.5</h3>
+                    <button onclick="copyLegacyReportText()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-4 py-2 rounded-xl text-xs font-bold transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        <span id="copyLegacyStatus">คัดลอกข้อความ</span>
+                    </button>
+                </div>
+                <div id="legacyReportText" class="bg-slate-50 rounded-xl p-4 border border-slate-100 text-xs font-bold text-slate-600 leading-relaxed max-h-[300px] overflow-y-auto whitespace-pre-wrap"></div>
+            </div>
+            <!-- END: Copy Report -->
 
             <!-- Fallback Control (Manual Input) -->
             <div id="manualPanel" class="bg-white p-6 rounded-[30px] shadow-sm border border-slate-100 mt-6 opacity-40 hover:opacity-100 transition-opacity">
@@ -179,7 +211,7 @@
                 </div>
             </div>
 
-            <!-- Full Ranking Table -->
+            <!-- Full Ranking Table (CCDC/GISTDA Top10 View Only) -->
             <div id="fullListSection" class="hidden bg-white rounded-[32px] shadow-sm overflow-hidden border border-slate-100 mt-6">
                 <div class="p-6 border-b bg-slate-50/50 flex flex-wrap justify-between items-center gap-2">
                     <h3 id="tableTitle" class="font-black text-slate-700 uppercase tracking-widest text-sm">ตารางสรุปรายอำเภอ</h3>
@@ -202,7 +234,7 @@
 
             <div id="statusMessage" class="text-center mt-4 text-xs font-bold text-slate-400 min-h-[20px]"></div>
 
-            <!-- Missing Alert -->
+            <!-- Missing Alert (Only for Top10/GISTDA views) -->
             <div id="missingAlert" class="hidden bg-red-500 p-5 rounded-3xl text-white shadow-lg shadow-red-100 mt-6">
                 <div class="flex items-start gap-4">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
@@ -215,7 +247,7 @@
             
             <footer class="text-center py-12 opacity-40">
                 <p class="text-[10px] font-black uppercase tracking-[0.5em] text-slate-500">Chiang Mai Air Monitoring Console (Unified)</p>
-                <p id="footerSource" class="text-[9px] font-bold text-slate-400 mt-2 tracking-widest">Powered by CMU CCDC Hourly Data Source</p>
+                <p id="footerSource" class="text-[9px] font-bold text-slate-400 mt-2 tracking-widest">Powered by CMU CCDC & GISTDA Data Source</p>
             </footer>
         </div>
 
@@ -228,11 +260,11 @@
 
     </div>
 
-    <!-- Hidden Export Container (CCDC/GISTDA) -->
+    <!-- Hidden Export Container (CCDC/GISTDA Top10) -->
     <div id="hiddenExportContainer"></div>
 
     <!-- ========================================================= -->
-    <!-- JAVASCRIPT: โค้ดเดิม CCDC & GISTDA -->
+    <!-- JAVASCRIPT: โค้ดควบคุมระบบ CCDC, CCDC_25 & GISTDA -->
     <!-- ========================================================= -->
     <script>
         const allDistricts = ["เมืองเชียงใหม่", "จอมทอง", "แม่แจ่ม", "เชียงดาว", "ดอยสะเก็ด", "แม่แตง", "แม่ริม", "สะเมิง", "ฝาง", "แม่อาย", "พร้าว", "สันป่าตอง", "สันกำแพง", "สันทราย", "หางดง", "ฮอด", "ดอยเต่า", "อมก๋อย", "สารภี", "เวียงแหง", "ไชยปราการ", "แม่วาง", "แม่ออน", "ดอยหล่อ", "กัลยาณิวัฒนา"];
@@ -243,6 +275,7 @@
         let currentMode = 'CCDC'; 
         let cache = {
             CCDC: { data: null, updateTime: '', rawInput: '' },
+            CCDC_25: { data: null, updateTime: '', rawInput: '' }, // เพิ่ม Cache สำหรับ 25 อำเภอ
             GISTDA: { data: null, updateTime: '', rawInput: '' }
         };
 
@@ -251,12 +284,13 @@
         };
 
         // ==========================================
-        // ROUTER SYSTEM (สลับโหมด 3 ระบบ)
+        // ROUTER SYSTEM (สลับโหมด 4 ระบบ)
         // ==========================================
         function switchMode(mode) {
             currentMode = mode;
             
             const btnCCDC = document.getElementById('btnModeCCDC');
+            const btnCCDC25 = document.getElementById('btnModeCCDC25');
             const btnGISTDA = document.getElementById('btnModeGISTDA');
             const btnAIR4THAI = document.getElementById('btnModeAIR4THAI');
             
@@ -267,19 +301,22 @@
             const tableHeaderRow = document.getElementById('tableHeaderRow');
             
             // รีเซ็ตปุ่มทั้งหมดก่อน
-            btnCCDC.className = 'toggle-btn text-slate-500 hover:text-slate-700 px-6 py-2 rounded-xl font-bold text-sm bg-transparent shadow-none';
-            btnGISTDA.className = 'toggle-btn text-slate-500 hover:text-slate-700 px-6 py-2 rounded-xl font-bold text-sm bg-transparent shadow-none';
-            btnAIR4THAI.className = 'toggle-btn text-slate-500 hover:text-slate-700 px-6 py-2 rounded-xl font-bold text-sm bg-transparent shadow-none';
+            const defaultClass = 'toggle-btn text-slate-500 hover:text-slate-700 px-4 py-2 rounded-xl font-bold text-sm bg-transparent shadow-none';
+            btnCCDC.className = defaultClass;
+            btnCCDC25.className = defaultClass;
+            btnGISTDA.className = defaultClass;
+            btnAIR4THAI.className = defaultClass;
 
             if (mode === 'CCDC') {
                 legacyContainer.classList.remove('hidden');
                 reactContainer.classList.add('hidden');
                 
-                btnCCDC.className = 'toggle-btn toggle-active-ccdc px-6 py-2 rounded-xl font-bold text-sm';
+                btnCCDC.className = 'toggle-btn toggle-active-ccdc px-4 py-2 rounded-xl font-bold text-sm';
                 headerContainer.classList.remove('border-[#0ea5e9]');
                 headerContainer.classList.add('border-[#0074e4]');
                 document.getElementById('headerTitle').innerText = 'ระบบรายงานค่าฝุ่น "จ.เชียงใหม่"';
                 document.getElementById('headerSubtitle').innerText = 'อ้างอิงจากจุดตรวจวัดในพื้นที่ (CCDC)';
+                document.getElementById('copyTitle').innerText = 'คัดลอกรายงาน PM2.5 (10 อันดับ)';
                 
                 document.getElementById('updateBtnText').innerText = 'อัปเดตข้อมูลล่าสุด';
                 document.getElementById('manualTitle').innerText = 'ประมวลผลด้วย Source Code (Manual)';
@@ -299,18 +336,50 @@
                 
                 document.getElementById('htmlInput').value = cache.CCDC.rawInput;
                 clearScreenUI();
+                
                 if (cache.CCDC.data && cache.CCDC.data.length > 0) renderCCDC(cache.CCDC.data);
                 else forceUpdate();
+
+            } else if (mode === 'CCDC_25') {
+                legacyContainer.classList.remove('hidden');
+                reactContainer.classList.add('hidden');
+                
+                btnCCDC25.className = 'toggle-btn toggle-active-ccdc px-4 py-2 rounded-xl font-bold text-sm';
+                headerContainer.classList.remove('border-[#0ea5e9]');
+                headerContainer.classList.add('border-[#0074e4]');
+                document.getElementById('headerTitle').innerText = 'ระบบรายงานค่าฝุ่น "จ.เชียงใหม่"';
+                document.getElementById('headerSubtitle').innerText = 'อ้างอิงจากจุดตรวจวัดในพื้นที่ (ครบ 25 อำเภอ)';
+                document.getElementById('copyTitle').innerText = 'คัดลอกรายงาน PM2.5 (ทุกอำเภอ)';
+                
+                document.getElementById('updateBtnText').innerText = 'อัปเดตข้อมูลล่าสุด';
+                document.getElementById('manualTitle').innerText = 'ประมวลผลด้วย Source Code (Manual)';
+                document.getElementById('htmlInput').placeholder = 'วาง Source Code HTML จากหน้าเว็บ CCDC ที่นี่...';
+                document.getElementById('btnProcessManual').innerText = 'ประมวลผลจาก HTML';
+                document.getElementById('manualHelper').classList.add('hidden');
+                
+                document.getElementById('footerSource').innerText = 'Powered by CMU CCDC Hourly Data Source';
+                
+                document.getElementById('htmlInput').value = cache.CCDC_25.rawInput;
+                clearScreenUI();
+                
+                document.getElementById('grid25Section').classList.remove('hidden');
+                document.getElementById('legacyCopySection').classList.remove('hidden');
+                
+                if (cache.CCDC_25.data && cache.CCDC_25.data.length > 0) {
+                    renderCCDC25(cache.CCDC_25.data);
+                    updateLegacyReportText();
+                } else forceUpdate();
 
             } else if (mode === 'GISTDA') {
                 legacyContainer.classList.remove('hidden');
                 reactContainer.classList.add('hidden');
                 
-                btnGISTDA.className = 'toggle-btn toggle-active-gistda px-6 py-2 rounded-xl font-bold text-sm';
+                btnGISTDA.className = 'toggle-btn toggle-active-gistda px-4 py-2 rounded-xl font-bold text-sm';
                 headerContainer.classList.remove('border-[#0074e4]');
                 headerContainer.classList.add('border-[#0ea5e9]');
                 document.getElementById('headerTitle').innerText = 'ระบบรายงานค่าฝุ่น "จ.เชียงใหม่"';
                 document.getElementById('headerSubtitle').innerText = 'อ้างอิงจาก AI ดาวเทียม (GISTDA)';
+                document.getElementById('copyTitle').innerText = 'คัดลอกรายงาน PM2.5 (10 อันดับ ดาวเทียม)';
                 
                 document.getElementById('updateBtnText').innerText = 'อัปเดตข้อมูลล่าสุด';
                 document.getElementById('manualTitle').innerText = 'หากดึงข้อมูลไม่ได้? คลิกเพื่อวางโค้ด JSON เอง (Manual)';
@@ -335,8 +404,8 @@
             } else if (mode === 'AIR4THAI') {
                 legacyContainer.classList.add('hidden');
                 reactContainer.classList.remove('hidden');
-                btnAIR4THAI.className = 'toggle-btn toggle-active-air4thai px-6 py-2 rounded-xl font-bold text-sm';
-                // ระบบ React ดึงข้อมูลเองอยู่แล้วเมื่อ Component Mount ไม่ต้องเรียก forceUpdate
+                btnAIR4THAI.className = 'toggle-btn toggle-active-air4thai px-4 py-2 rounded-xl font-bold text-sm';
+                // ระบบ React ดึงข้อมูลเองอยู่แล้วเมื่อ Component Mount
             }
         }
 
@@ -350,8 +419,10 @@
 
         function clearScreenUI() {
             document.getElementById('summarySection').classList.add('hidden');
+            document.getElementById('grid25Section').classList.add('hidden');
             document.getElementById('fullListSection').classList.add('hidden');
             document.getElementById('missingAlert').classList.add('hidden');
+            document.getElementById('legacyCopySection').classList.add('hidden');
             document.getElementById('timeDisplay').classList.add('hidden');
             document.getElementById('statusMessage').innerText = '';
             document.getElementById('top10WebContainer').innerHTML = '';
@@ -360,14 +431,14 @@
         }
 
         function forceUpdate() {
-            if (currentMode === 'CCDC') fetchFromGAS();
+            if (currentMode === 'CCDC' || currentMode === 'CCDC_25') fetchFromGAS();
             else if (currentMode === 'GISTDA') autoFetchDataGISTDA();
         }
 
         function processManualInput() {
             const val = document.getElementById('htmlInput').value;
             cache[currentMode].rawInput = val; 
-            if (currentMode === 'CCDC') analyzeDustHTML(val);
+            if (currentMode === 'CCDC' || currentMode === 'CCDC_25') analyzeDustHTML(val);
             else analyzeDustJSON(val);
         }
 
@@ -383,6 +454,7 @@
 
             document.getElementById('summarySection').classList.remove('hidden');
             document.getElementById('fullListSection').classList.remove('hidden');
+            document.getElementById('legacyCopySection').classList.remove('hidden');
 
             const missing = allDistricts.filter(d => !data.find(item => item.name === d));
             const missingAlert = document.getElementById('missingAlert');
@@ -409,24 +481,43 @@
             const modeData = cache[currentMode];
             if (!modeData || !modeData.data || modeData.data.length === 0) return "";
             
-            const data = modeData.data.slice(0, 10);
             let timeStr = modeData.updateTime || "";
-            
+
+            // --- สำหรับโหมด 25 อำเภอ (แสดงทั้งหมด รวมถึงที่ไม่มีข้อมูล) ---
+            if (currentMode === 'CCDC_25') {
+                let shortDate = timeStr;
+                const monthsFull = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+                const monthsShort = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+                for (let i = 0; i < 12; i++) {
+                    if (shortDate.includes(monthsFull[i])) shortDate = shortDate.replace(monthsFull[i], monthsShort[i]);
+                }
+                shortDate = shortDate.replace(/วัน.*?ที่\s*/, '');
+                shortDate = shortDate.replace(/25(\d{2})/, '$1');
+                
+                let text = `ค่าฝุ่น "จ.เชียงใหม่"\n${shortDate || 'ล่าสุด'}\n.\n`;
+                
+                modeData.data.forEach((item, index) => {
+                    let districtName = item.name === 'เมืองเชียงใหม่' ? 'เมือง' : item.name;
+                    if (item.val === -1) {
+                        text += `อันดับ ${index + 1} : อ.${districtName} (ไม่มีข้อมูล)\n`;
+                    } else {
+                        let locStr = (item.loc || item.location).replace(/\s*(?:อ\.|อำเภอ|จ\.|จังหวัด)\s*[ก-๙]+/g, '').trim();
+                        text += `อันดับ ${index + 1} : อ.${districtName} ${item.val} µg/m³\n(จุด : ${locStr})\n`;
+                    }
+                });
+                text += `.\nข้อมูลอ้างอิง : CMU CCDC (ค่าตามจุดตรวจวัดที่สูงที่สุดของอำเภอนั้น)`;
+                return text;
+            }
+
+            // --- สำหรับโหมด Top 10 (CCDC / GISTDA) ---
+            const data = modeData.data.slice(0, 10);
             let timeMatch = timeStr.match(/([0-9]{2}):([0-9]{2})/);
             let headerTime = "";
             if (timeMatch) {
-                let hr = parseInt(timeMatch[1]);
-                let min = timeMatch[2];
-                let timePrefix = "";
-                if (hr >= 4 && hr < 12) timePrefix = "เช้านี้ ";
-                else if (hr >= 12 && hr < 16) timePrefix = "บ่ายนี้ ";
-                else if (hr >= 16 && hr < 19) timePrefix = "เย็นนี้ ";
-                else timePrefix = "คืนนี้ ";
-                
+                let hr = parseInt(timeMatch[1]); let min = timeMatch[2]; let timePrefix = "";
+                if (hr >= 4 && hr < 12) timePrefix = "เช้านี้ "; else if (hr >= 12 && hr < 16) timePrefix = "บ่ายนี้ "; else if (hr >= 16 && hr < 19) timePrefix = "เย็นนี้ "; else timePrefix = "คืนนี้ ";
                 headerTime = `${timePrefix}${timeMatch[1]}.${min} น.`;
-            } else {
-                headerTime = timeStr;
-            }
+            } else { headerTime = timeStr; }
 
             let text = `10 อำเภอ "เชียงใหม่" ค่าฝุ่น PM2.5 สูงสุด ${headerTime}\n.\n`;
             
@@ -452,9 +543,7 @@
             const statusEl = document.getElementById('copyLegacyStatus');
             const oldText = statusEl.innerText;
             statusEl.innerText = 'คัดลอกสำเร็จ!';
-            setTimeout(() => {
-                statusEl.innerText = oldText;
-            }, 2000);
+            setTimeout(() => { statusEl.innerText = oldText; }, 2000);
         }
 
         // ==========================================
@@ -478,27 +567,16 @@
                     let nums = rawDateStr.match(/\d+/g);
                     if (nums) {
                          for(let n of nums) {
-                             if(parseInt(n) >= 1 && parseInt(n) <= 31) {
-                                 day = parseInt(n);
-                                 break;
-                             }
+                             if(parseInt(n) >= 1 && parseInt(n) <= 31) { day = parseInt(n); break; }
                          }
                     }
 
                     let timeMatch = rawDateStr.match(/([0-2]?\d):([0-5]\d)/);
-                    if(timeMatch) {
-                        hrs = parseInt(timeMatch[1]);
-                        mins = parseInt(timeMatch[2]);
-                    }
+                    if(timeMatch) { hrs = parseInt(timeMatch[1]); mins = parseInt(timeMatch[2]); }
 
                     for (let i = 0; i < 12; i++) {
-                        if (rawDateStr.includes(thaiMonths[i]) || rawDateStr.includes(thaiMonthsShort[i])) {
-                            month = i;
-                            foundMonth = true;
-                            break;
-                        }
+                        if (rawDateStr.includes(thaiMonths[i]) || rawDateStr.includes(thaiMonthsShort[i])) { month = i; foundMonth = true; break; }
                     }
-
                     if (foundMonth) d = new Date(year, month, day, hrs, mins);
                 }
 
@@ -512,7 +590,7 @@
         }
 
         // ==========================================
-        // CCDC LOGIC
+        // CCDC & CCDC_25 LOGIC (Unified Fetching)
         // ==========================================
         async function fetchFromGAS() {
             const statusEl = document.getElementById('statusMessage');
@@ -549,6 +627,7 @@
             const html = rawHtml || document.getElementById('htmlInput').value;
             if (!html) return;
             cache.CCDC.rawInput = html;
+            cache.CCDC_25.rawInput = html;
 
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
@@ -560,7 +639,20 @@
                     updateTime = getFullThaiDateString(rawTime);
                 }
             });
-            if (updateTime) cache.CCDC.updateTime = updateTime;
+            if (updateTime) {
+                cache.CCDC.updateTime = updateTime;
+                cache.CCDC_25.updateTime = updateTime;
+            }
+
+            // ฐานข้อมูลช่วยวิเคราะห์ชื่ออำเภอจากจุดตรวจวัดที่เขียนไม่ชัดเจน
+            const knownStations = {
+                "รพ.สต.บ้านปางเฟือง": "เชียงดาว",
+                "รร.บ้านปางเฟือง": "เชียงดาว",
+                "รพ.สต.บ้านขามสุ่มป่า": "พร้าว",
+                "สนามกีฬากลาง 60 ปี ม.เชียงใหม่": "เมืองเชียงใหม่",
+                "สสอ.อมก๋อย": "อมก๋อย",
+                "รพ.สต.บ้านทุ่งข้าวพวง": "เชียงดาว"
+            };
 
             const districtMap = {};
             doc.querySelectorAll('tr').forEach(row => {
@@ -568,16 +660,34 @@
                 const valEl = row.querySelector('.c_value');
                 if (nameEl && valEl) {
                     let fullName = nameEl.innerText.trim();
-                    
-                    // เพิ่มเงื่อนไขดักจับแก้ไขชื่อให้ รร.บ้านปางเฟือง
-                    if (fullName.includes("รร.บ้านปางเฟือง")) {
-                        fullName = "รร.บ้านปางเฟือง อ.เชียงดาว จ.เชียงใหม่";
-                    }
-                    
                     const value = Math.round(parseFloat(valEl.innerText.trim()));
-                    const amphoeMatch = fullName.match(/(?:อ\.|อำเภอ)\s*([ก-๙]+)/);
-                    if (amphoeMatch) {
-                        let aName = amphoeMatch[1].trim();
+                    
+                    let aName = null;
+                    // 1. ตรวจสอบจาก knownStations
+                    for (const [station, district] of Object.entries(knownStations)) {
+                        if (fullName.includes(station)) {
+                            aName = district;
+                            if (!fullName.includes("อ.") && !fullName.includes("อำเภอ")) {
+                                fullName += ` อ.${district === "เมืองเชียงใหม่" ? "เมือง" : district}`;
+                            }
+                            break;
+                        }
+                    }
+
+                    // 2. ถ้าไม่เจอ ค้นหาคำว่า อ. หรือเทียบชื่อตรงๆ
+                    if (!aName) {
+                        const amphoeMatch = fullName.match(/(?:อ\.|อำเภอ)\s*([ก-๙]+)/);
+                        if (amphoeMatch) {
+                            aName = amphoeMatch[1].trim();
+                        } else {
+                            for (let d of allDistricts) {
+                                let checkName = d === "เมืองเชียงใหม่" ? "เมือง" : d;
+                                if (fullName.includes(checkName)) { aName = d; break; }
+                            }
+                        }
+                    }
+
+                    if (aName) {
                         if (aName === "เมือง") aName = "เมืองเชียงใหม่";
                         if (!districtMap[aName] || value > districtMap[aName].val) {
                             districtMap[aName] = { val: value, loc: fullName };
@@ -586,11 +696,153 @@
                 }
             });
 
-            const resultData = Object.keys(districtMap).map(k => ({ name: k, val: districtMap[k].val, location: districtMap[k].loc }));
-            resultData.sort((a, b) => b.val - a.val);
-            cache.CCDC.data = resultData;
+            // --- ชุดข้อมูลที่ 1: สำหรับ CCDC Top 10 (ตัดข้อมูลเสียทิ้ง) ---
+            const resultDataStandard = Object.keys(districtMap).map(k => ({ name: k, val: districtMap[k].val, location: districtMap[k].loc }));
+            resultDataStandard.sort((a, b) => b.val - a.val);
+            cache.CCDC.data = resultDataStandard;
+
+            // --- ชุดข้อมูลที่ 2: สำหรับ CCDC 25 อำเภอ (บังคับมี 25 ครบ อันไหนไม่มีใส่ -1) ---
+            let resultData25 = [];
+            allDistricts.forEach(dist => {
+                if (districtMap[dist]) {
+                    resultData25.push({ name: dist, val: districtMap[dist].val, loc: districtMap[dist].loc });
+                } else {
+                    resultData25.push({ name: dist, val: -1, loc: 'ไม่มีข้อมูลจากจุดตรวจวัด' });
+                }
+            });
+            resultData25.sort((a, b) => {
+                if (a.val === -1) return 1;
+                if (b.val === -1) return -1;
+                return b.val - a.val;
+            });
+            cache.CCDC_25.data = resultData25;
             
-            if (currentMode === 'CCDC') renderCCDC(resultData);
+            // Render ตามโหมดปัจจุบัน
+            if (currentMode === 'CCDC') {
+                renderCCDC(resultDataStandard);
+            } else if (currentMode === 'CCDC_25') {
+                renderCCDC25(resultData25);
+                updateLegacyReportText(); // For update copy text
+            }
+        }
+
+        // Helper สำหรับสีใน Grid 25
+        function getAqiColorForBlock(val) {
+            if (val > 75) return { bg: '#FF0000', text: 'white', mapText: '#ffffff' }; 
+            if (val > 37.5) return { bg: '#FF9900', text: 'white', mapText: '#ffffff' }; 
+            if (val > 25) return { bg: '#FFFF00', text: '#111827', mapText: '#111827' }; 
+            if (val > 15) return { bg: '#92D050', text: 'white', mapText: '#ffffff' }; 
+            if (val >= 0) return { bg: '#00B0F0', text: 'white', mapText: '#ffffff' }; 
+            return { bg: '#e5e7eb', text: '#374151', mapText: '#374151' }; 
+        }
+
+        function renderCCDC25(data) {
+            document.getElementById('timeValue').innerText = cache.CCDC_25.updateTime;
+            if(cache.CCDC_25.updateTime) document.getElementById('timeDisplay').classList.remove('hidden');
+
+            const cols = parseInt(document.getElementById('ccdcGridCols').value);
+            const container = document.getElementById('ccdc-grid-container');
+            container.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+            
+            let html = '';
+            data.forEach((item, index) => {
+                const isMissing = item.val === -1;
+                let colors = getAqiColorForBlock(item.val);
+                if (isMissing) colors = { bg: '#e5e7eb', text: '#6b7280', border: '#d1d5db' };
+                
+                const isDarkText = colors.mapText === '#111827';
+                const textShadowStyle = isDarkText ? '1px 1px 1px rgba(255,255,255,0.9)' : '1px 1px 3px rgba(0,0,0,0.6)';
+                
+                let nameSize = '17cqi'; 
+                if (item.name === "เมืองเชียงใหม่" || item.name === "กัลยาณิวัฒนา") {
+                    nameSize = '12cqi';
+                } else if (item.name.length > 7) {
+                    nameSize = '14.5cqi';
+                }
+
+                html += `
+                <div class="ranking-block relative px-2 rounded-2xl shadow-sm border-2 overflow-hidden flex flex-col justify-between items-center" 
+                     style="background-color: ${colors.bg}; color: ${colors.text}; border-color: ${colors.border || colors.bg}; aspect-ratio: 1 / 1; padding: 6% 2%; container-type: inline-size;">
+                    <div class="w-full flex flex-col items-center mt-[2%]">
+                        <span class="font-extrabold rank-text leading-none opacity-90 block" style="font-size: 11cqi; text-shadow: ${isMissing?'none':textShadowStyle};">#${index + 1}</span>
+                        <span class="font-bold tracking-wide leading-none name-text text-center w-full block mt-[4%]" style="font-size: ${nameSize}; white-space: nowrap; text-shadow: ${isMissing?'none':textShadowStyle};">${item.name}</span>
+                    </div>
+                    <div class="w-full flex flex-col items-center mb-[8%]">
+                        ${isMissing ? 
+                            `<span class="font-bold opacity-80 pm25-text" style="font-size: 14cqi;">ไม่มีข้อมูล</span>` : 
+                            `<span class="font-extrabold leading-none pm25-text block mb-[2%]" style="font-size: 42cqi; text-shadow: ${textShadowStyle};">${item.val}</span>
+                             <span class="font-semibold opacity-90 unit-text leading-none block" style="font-size: 10cqi; text-shadow: ${textShadowStyle};">µg/m³</span>`
+                        }
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+            
+            // ในโหมดนี้ให้โชว์ Grid และ Text Report
+            document.getElementById('grid25Section').classList.remove('hidden');
+            document.getElementById('legacyCopySection').classList.remove('hidden');
+        }
+
+        function saveImageCCDC25() {
+            const element = document.getElementById('ccdc-ranking-export-container');
+            if (!element) return;
+            element.style.width = '1200px'; 
+            
+            html2canvas(element, { 
+                scale: 2, backgroundColor: null, useCORS: true, logging: false,
+                onclone: (clonedDoc) => {
+                    const originalBlocks = document.querySelectorAll('#ccdc-grid-container .ranking-block');
+                    const clonedBlocks = clonedDoc.querySelectorAll('#ccdc-grid-container .ranking-block');
+                    clonedBlocks.forEach((clonedBlock, idx) => {
+                        if(originalBlocks[idx]) {
+                            const w = originalBlocks[idx].offsetWidth;
+                            const txtRank = clonedBlock.querySelector('.rank-text');
+                            const txtName = clonedBlock.querySelector('.name-text');
+                            const txtPm25 = clonedBlock.querySelector('.pm25-text');
+                            const txtUnit = clonedBlock.querySelector('.unit-text');
+
+                            let dName = txtName ? txtName.innerText : "";
+                            let nameRatio = 0.17;
+                            if (dName === "เมืองเชียงใหม่" || dName === "กัลยาณิวัฒนา") nameRatio = 0.12;
+                            else if (dName.length > 7) nameRatio = 0.145;
+
+                            if (txtRank) { 
+                                txtRank.style.fontSize = (w * 0.11) + 'px'; 
+                                txtRank.style.marginBottom = (w * 0.04) + 'px'; 
+                                txtRank.style.transform = 'translateY(-' + (w * 0.04) + 'px)'; 
+                            }
+                            if (txtName) { 
+                                txtName.style.fontSize = (w * nameRatio) + 'px'; 
+                                txtName.style.height = (w * 0.22) + 'px';
+                                txtName.style.display = 'flex';
+                                txtName.style.alignItems = 'center';
+                                txtName.style.justifyContent = 'center';
+                                txtName.style.transform = 'translateY(-' + (w * 0.10) + 'px)';
+                            }
+                            if (txtPm25) { 
+                                if (txtPm25.innerText === 'ไม่มีข้อมูล') {
+                                    txtPm25.style.fontSize = (w * 0.14) + 'px'; 
+                                    txtPm25.style.transform = 'translateY(-' + (w * 0.12) + 'px)';
+                                } else {
+                                    txtPm25.style.fontSize = (w * 0.42) + 'px'; 
+                                    txtPm25.style.marginBottom = '0px';
+                                    txtPm25.style.transform = 'translateY(-' + (w * 0.16) + 'px)'; 
+                                }
+                            }
+                            if (txtUnit) { 
+                                txtUnit.style.fontSize = (w * 0.10) + 'px'; 
+                                txtUnit.style.transform = 'translateY(-' + (w * 0.12) + 'px)'; 
+                            }
+                        }
+                    });
+                }
+            }).then(canvas => {
+                const link = document.createElement("a");
+                link.href = canvas.toDataURL("image/png");
+                link.download = `PM25_CCDC_Grid25_${Date.now()}.png`;
+                link.click();
+                element.style.width = ''; 
+            });
         }
 
         function renderCCDC(data) {
@@ -981,12 +1233,10 @@
             }
         };
 
-        // --- ฟังก์ชันจัดเงาตัวหนังสือ (Text Shadow) ---
         const getBlockTextShadow = (isDarkText) => {
             return isDarkText ? '1px 1px 1px rgba(255,255,255,0.9)' : '1px 1px 3px rgba(0,0,0,0.7)';
         };
 
-        // --- Icons ---
         const RefreshIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
         const DownloadIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>;
         const ClipboardIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>;
@@ -1002,10 +1252,7 @@
             const [sortBy, setSortBy] = React.useState('PM25'); 
             const [reportMode, setReportMode] = React.useState('PM25');
             const [copyStatus, setCopyStatus] = React.useState('Copy Report');
-            
-            // State สำหรับจัดการ "สีเส้นขอบแผนที่"
             const [mapStrokeColor, setMapStrokeColor] = React.useState('#ffffff');
-            
             const [enabledProvinces, setEnabledProvinces] = React.useState(new Set(NORTHERN_PROVINCES));
 
             const toggleProvince = (prov) => {
@@ -1072,7 +1319,6 @@
                         const rawTime = northernStations[0].AQILast.time;
                         const fullDateTime = `${rawDate} ${rawTime}`;
                         
-                        // ใช้ฟังก์ชัน getFullThaiDateString จากโค้ดหลักเพื่อแปลงเป็นวันที่แบบเต็ม
                         setLastUpdated(getFullThaiDateString(fullDateTime));
                         setApiDateTime({ date: rawDate, time: rawTime });
                     }
@@ -1235,7 +1481,6 @@
 
             return (
                 <div>
-                    {/* Header ของระบบใหม่ปรับให้เหมือนระบบเก่า */}
                     <div className="bg-white p-5 md:p-6 rounded-[24px] md:rounded-3xl shadow-sm border-l-[12px] md:border-l-[16px] border-[#10b981] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-4 transition-colors duration-300 mb-6">
                         <div className="w-full md:flex-1">
                             <h1 className="text-xl md:text-4xl font-[900] text-slate-900 leading-snug md:leading-none tracking-tighter uppercase">ระบบรายงานค่าฝุ่น "ภาคเหนือ"</h1>
@@ -1256,11 +1501,8 @@
                         </div>
                     </div>
 
-                    {/* ระบบเลือกจังหวัด & โหมดรายงาน */}
                     <div className="bg-white border border-slate-200 rounded-2xl shadow-sm mb-6 z-10">
                         <div className="px-4 py-3 flex flex-col lg:flex-row lg:items-start gap-4">
-                            
-                            {/* กลุ่มควบคุมด้านซ้าย */}
                             <div className="flex flex-wrap items-center gap-3 shrink-0">
                                 <div className="bg-slate-100 p-1 rounded-xl flex shadow-inner">
                                     <button onClick={() => setReportMode('PM25')} className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${reportMode === 'PM25' ? 'bg-white text-emerald-600 shadow-md scale-105' : 'text-slate-400 hover:text-slate-600'}`}>PM2.5</button>
@@ -1275,7 +1517,6 @@
                                 </div>
                             </div>
 
-                            {/* แถบรายชื่อจังหวัด */}
                             <div className="flex-1 flex items-start gap-3 min-w-0">
                                 <div className="flex items-center gap-1.5 text-slate-500 shrink-0 mt-1.5">
                                     <FilterIcon /> 
@@ -1320,7 +1561,6 @@
                                 </div>
 
                                 <div className="bg-white rounded-[24px] shadow-sm border border-slate-200 p-4 relative">
-                                    {/* ใส่คลาส export-prompt-font เพื่อบังคับใช้ Prompt ตอน Export */}
                                     <div id="map-only-export" className="relative w-full flex flex-col items-center pb-4 pt-2 export-prompt-font" style={{ fontFamily: "'Prompt', sans-serif" }}>
                                         <div className="relative w-full overflow-visible flex justify-center">
                                             {geoMapLoading ? <div className="h-[500px] flex items-center justify-center text-slate-400 font-bold">กำลังโหลดแผนที่...</div> : (
@@ -1330,7 +1570,6 @@
                                                             const thaiName = PROVINCE_NAME_MAP[feature.properties.NAME_1 || feature.properties.name || feature.properties.pro_en || feature.properties.NAME];
                                                             const val = reportMode === 'PM25' ? mueangData[thaiName]?.pm25 : mueangData[thaiName]?.aqi;
                                                             const colors = getColor(val || 'N/A', reportMode);
-                                                            // เปลี่ยนสีเส้น (stroke) ให้ตรงกับที่เลือก
                                                             return <path key={`path-${thaiName}`} d={pathGenerator(feature)} fill={colors.fill} stroke={mapStrokeColor} strokeWidth="1.5" className="map-province cursor-pointer" />;
                                                         })}
                                                     </g>
@@ -1423,7 +1662,6 @@
                                 </div>
                             </div>
                             
-                            {/* ใส่คลาส export-prompt-font เพื่อบังคับใช้ Prompt ตอน Export */}
                             <div id="ranking-only-export" className="pt-2 pb-4 px-2 export-prompt-font" style={{ backgroundColor: 'transparent', fontFamily: "'Prompt', sans-serif" }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rankingCols}, minmax(0, 1fr))`, gap: '12px' }}>
                                     {rankedProvinces.map((item, index) => {
