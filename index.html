@@ -786,53 +786,61 @@
         function saveImageCCDC25() {
             const element = document.getElementById('ccdc-ranking-export-container');
             if (!element) return;
+            
+            // เก็บค่าความกว้างเดิมไว้
+            const oldWidth = element.style.width;
+            
+            // ขยายเพื่อ Export รูปใหญ่
             element.style.width = '1200px'; 
+            
+            // คำนวณความกว้างบล็อก (สมมติ gap 12px) แทนการดึงจาก DOM เพื่อแก้ปัญหา Reflow
+            const cols = parseInt(document.getElementById('ccdcGridCols').value) || 5;
+            const gap = 12;
+            const blockWidth = (1200 - ((cols - 1) * gap)) / cols;
             
             html2canvas(element, { 
                 scale: 2, backgroundColor: null, useCORS: true, logging: false,
                 onclone: (clonedDoc) => {
-                    const originalBlocks = document.querySelectorAll('#ccdc-grid-container .ranking-block');
                     const clonedBlocks = clonedDoc.querySelectorAll('#ccdc-grid-container .ranking-block');
-                    clonedBlocks.forEach((clonedBlock, idx) => {
-                        if(originalBlocks[idx]) {
-                            const w = originalBlocks[idx].offsetWidth;
-                            const txtRank = clonedBlock.querySelector('.rank-text');
-                            const txtName = clonedBlock.querySelector('.name-text');
-                            const txtPm25 = clonedBlock.querySelector('.pm25-text');
-                            const txtUnit = clonedBlock.querySelector('.unit-text');
+                    clonedBlocks.forEach((clonedBlock) => {
+                        const w = blockWidth;
 
-                            let dName = txtName ? txtName.innerText : "";
-                            let nameRatio = 0.17;
-                            if (dName === "เมืองเชียงใหม่" || dName === "กัลยาณิวัฒนา") nameRatio = 0.12;
-                            else if (dName.length > 7) nameRatio = 0.145;
+                        const txtRank = clonedBlock.querySelector('.rank-text');
+                        const txtName = clonedBlock.querySelector('.name-text');
+                        const txtPm25 = clonedBlock.querySelector('.pm25-text');
+                        const txtUnit = clonedBlock.querySelector('.unit-text');
 
-                            if (txtRank) { 
-                                txtRank.style.fontSize = (w * 0.11) + 'px'; 
-                                txtRank.style.marginBottom = (w * 0.04) + 'px'; 
-                                txtRank.style.transform = 'translateY(-' + (w * 0.04) + 'px)'; 
+                        let dName = txtName ? txtName.innerText : "";
+                        let nameRatio = 0.17;
+                        if (dName === "เมืองเชียงใหม่" || dName === "กัลยาณิวัฒนา") nameRatio = 0.12;
+                        else if (dName.length > 7) nameRatio = 0.145;
+
+                        if (txtRank) { 
+                            txtRank.style.fontSize = (w * 0.11) + 'px'; 
+                            txtRank.style.marginBottom = (w * 0.04) + 'px'; 
+                            txtRank.style.transform = `translateY(-${w * 0.04}px)`; 
+                        }
+                        if (txtName) { 
+                            txtName.style.fontSize = (w * nameRatio) + 'px'; 
+                            txtName.style.height = (w * 0.22) + 'px';
+                            txtName.style.display = 'flex';
+                            txtName.style.alignItems = 'center';
+                            txtName.style.justifyContent = 'center';
+                            txtName.style.transform = `translateY(-${w * 0.10}px)`;
+                        }
+                        if (txtPm25) { 
+                            if (txtPm25.innerText === 'ไม่มีข้อมูล') {
+                                txtPm25.style.fontSize = (w * 0.14) + 'px'; 
+                                txtPm25.style.transform = `translateY(-${w * 0.12}px)`;
+                            } else {
+                                txtPm25.style.fontSize = (w * 0.42) + 'px'; 
+                                txtPm25.style.marginBottom = '0px';
+                                txtPm25.style.transform = `translateY(-${w * 0.16}px)`; 
                             }
-                            if (txtName) { 
-                                txtName.style.fontSize = (w * nameRatio) + 'px'; 
-                                txtName.style.height = (w * 0.22) + 'px';
-                                txtName.style.display = 'flex';
-                                txtName.style.alignItems = 'center';
-                                txtName.style.justifyContent = 'center';
-                                txtName.style.transform = 'translateY(-' + (w * 0.10) + 'px)';
-                            }
-                            if (txtPm25) { 
-                                if (txtPm25.innerText === 'ไม่มีข้อมูล') {
-                                    txtPm25.style.fontSize = (w * 0.14) + 'px'; 
-                                    txtPm25.style.transform = 'translateY(-' + (w * 0.12) + 'px)';
-                                } else {
-                                    txtPm25.style.fontSize = (w * 0.42) + 'px'; 
-                                    txtPm25.style.marginBottom = '0px';
-                                    txtPm25.style.transform = 'translateY(-' + (w * 0.16) + 'px)'; 
-                                }
-                            }
-                            if (txtUnit) { 
-                                txtUnit.style.fontSize = (w * 0.10) + 'px'; 
-                                txtUnit.style.transform = 'translateY(-' + (w * 0.12) + 'px)'; 
-                            }
+                        }
+                        if (txtUnit) { 
+                            txtUnit.style.fontSize = (w * 0.10) + 'px'; 
+                            txtUnit.style.transform = `translateY(-${w * 0.12}px)`; 
                         }
                     });
                 }
@@ -841,7 +849,7 @@
                 link.href = canvas.toDataURL("image/png");
                 link.download = `PM25_CCDC_Grid25_${Date.now()}.png`;
                 link.click();
-                element.style.width = ''; 
+                element.style.width = oldWidth; // คืนค่าหน้าจอเดิม
             });
         }
 
