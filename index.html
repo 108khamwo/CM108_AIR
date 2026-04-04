@@ -2346,7 +2346,7 @@
                                                     <div className="flex items-center opacity-95" style={{ marginBottom: '3%' }}><span className="font-semibold rank-text leading-none" style={{ fontSize: '8cqi', ...textShadowStyle }}>#{index + 1}</span></div>
                                                     <span className="font-bold tracking-wide leading-tight name-text" style={{ fontSize: '16cqi', ...textShadowStyle }}>{item.name}</span>
                                                     <span className="font-black leading-none pm25-text" style={{ fontSize: '35cqi', marginTop: '2%', marginBottom: '2%', ...textShadowStyle }}>{val}</span>
-                                                    <span className="font-semibold opacity-90 unit-text leading-none" style={{ fontSize: '10cqi', marginTop: rankingCols === 3 ? '-5%' : '0', ...textShadowStyle }}>{reportMode === 'PM25' ? 'µg/m³' : <span>AQ<span className="ml-[1.5px]">I</span></span>}</span>
+                                                    <span className="font-semibold opacity-90 unit-text leading-none" style={{ fontSize: '10cqi', ...textShadowStyle }}>{reportMode === 'PM25' ? 'µg/m³' : <span>AQ<span className="ml-[1.5px]">I</span></span>}</span>
                                                 </div>
                                                 {item.data?.isFallback && showFallbackName && <span className="absolute transition-transform font-medium opacity-85 ranking-fallback-text leading-none" style={{ fontSize: '6.5cqi', bottom: '2%', ...textShadowStyle }}>*{item.data.fallbackName}</span>}
                                             </div>
