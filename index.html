@@ -2031,7 +2031,7 @@
                                     if (txtName) { txtName.style.fontSize = (w * 0.16) + 'px'; txtName.style.transform = `translateY(-${w * 0.03}px)`; }
                                     
                                     if (txtPm25) { 
-                                        txtPm25.style.fontSize = (w * 0.35) + 'px'; 
+                                        txtPm25.style.fontSize = (w * 0.30) + 'px'; 
                                         txtPm25.style.transform = `translateY(-${w * 0.12}px)`; 
                                     }
                                     
@@ -2345,7 +2345,7 @@
                                                 <div className="flex flex-col items-center ranking-main-content transition-transform w-full">
                                                     <div className="flex items-center opacity-95" style={{ marginBottom: '3%' }}><span className="font-semibold rank-text leading-none" style={{ fontSize: '8cqi', ...textShadowStyle }}>#{index + 1}</span></div>
                                                     <span className="font-bold tracking-wide leading-tight name-text" style={{ fontSize: '16cqi', ...textShadowStyle }}>{item.name}</span>
-                                                    <span className="font-black leading-none pm25-text" style={{ fontSize: '42cqi', marginTop: '2%', marginBottom: '2%', ...textShadowStyle }}>{val}</span>
+                                                    <span className="font-black leading-none pm25-text" style={{ fontSize: '35cqi', marginTop: '2%', marginBottom: '2%', ...textShadowStyle }}>{val}</span>
                                                     <span className="font-semibold opacity-90 unit-text leading-none" style={{ fontSize: '10cqi', ...textShadowStyle }}>{reportMode === 'PM25' ? 'µg/m³' : <span>AQ<span className="ml-[1.5px]">I</span></span>}</span>
                                                 </div>
                                                 {item.data?.isFallback && showFallbackName && <span className="absolute transition-transform font-medium opacity-85 ranking-fallback-text leading-none" style={{ fontSize: '6.5cqi', bottom: '2%', ...textShadowStyle }}>*{item.data.fallbackName}</span>}
